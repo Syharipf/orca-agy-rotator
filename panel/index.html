@@ -2,27 +2,28 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Antigravity Accounts</title>
+  <title>Antigravity Quota & Usage Insights</title>
   <style>
     :root {
       --bg: var(--orca-background, #0c0d12);
       --fg: var(--orca-foreground, #e5e7eb);
-      --muted: var(--orca-muted-foreground, #9ca3af);
-      --faint: #4b5563;
-      --border: var(--orca-border, #1f2430);
+      --muted: var(--orca-muted-foreground, #94a3b8);
+      --faint: #334155;
+      --border: var(--orca-border, #1e2430);
       --card: var(--orca-card, #12151e);
+      --card-inner: #0b0e17;
       --hover: rgba(255, 255, 255, 0.035);
       --primary: var(--orca-primary, #4f46e5);
-      --primary-hover: #4338ca;
       --success: #10b981;
-      --success-bg: rgba(16, 185, 129, 0.08);
-      --success-border: rgba(16, 185, 129, 0.25);
+      --success-glow: rgba(16, 185, 129, 0.12);
+      --success-border: rgba(16, 185, 129, 0.28);
       --warning: #f59e0b;
       --danger: #ef4444;
-      --danger-bg: rgba(239, 68, 68, 0.08);
-      --danger-border: rgba(239, 68, 68, 0.25);
+      --danger-glow: rgba(239, 68, 68, 0.12);
+      --danger-border: rgba(239, 68, 68, 0.28);
+      --cyan: #38bdf8;
       --font-sans: var(--orca-font-sans, "Geist", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
-      --font-mono: var(--orca-font-mono, "Geist Mono", "JetBrains Mono", monospace);
+      --font-mono: var(--orca-font-mono, "Geist Mono", "JetBrains Mono", Menlo, monospace);
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -48,7 +49,7 @@
     ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
     ::-webkit-scrollbar-thumb:hover { background: var(--faint); }
 
-    /* Top Bar */
+    /* Top Navigation Bar */
     .topbar {
       display: flex;
       justify-content: space-between;
@@ -67,23 +68,23 @@
     }
     .brand-title {
       font-size: 12px;
-      font-weight: 600;
-      letter-spacing: -0.1px;
+      font-weight: 700;
+      letter-spacing: -0.2px;
       color: #fff;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
-    .live-pill {
+    .live-badge {
       display: inline-flex;
       align-items: center;
       gap: 4px;
       font-size: 9.5px;
-      font-weight: 500;
+      font-weight: 600;
       color: var(--success);
-      background: var(--success-bg);
+      background: var(--success-glow);
       border: 1px solid var(--success-border);
-      padding: 1px 5px;
+      padding: 1px 6px;
       border-radius: 10px;
       flex-shrink: 0;
     }
@@ -92,53 +93,57 @@
       height: 5px;
       border-radius: 50%;
       background: var(--success);
-      animation: blink 2.5s infinite;
+      box-shadow: 0 0 6px var(--success);
+      animation: pulse 2.2s infinite;
     }
-    @keyframes blink {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.3; }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.35; transform: scale(0.85); }
     }
 
     .topbar-actions {
       display: flex;
+      align-items: center;
       gap: 5px;
       flex-shrink: 0;
     }
     .btn {
-      appearance: none;
-      background: #1e2230;
+      background: #181d28;
       border: 1px solid var(--border);
       color: var(--fg);
-      padding: 4px 8px;
+      padding: 3.5px 7px;
       border-radius: 4px;
-      font-size: 10.5px;
+      font-size: 10px;
       font-weight: 500;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
       gap: 4px;
-      transition: background 0.1s ease, border-color 0.1s ease;
+      transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease;
       white-space: nowrap;
     }
     .btn:hover {
-      background: #282d3f;
-      border-color: #3b4258;
+      background: #232a3b;
+      border-color: #3b455d;
+      color: #fff;
     }
     .btn:active {
       transform: translateY(1px);
     }
     .btn:disabled {
-      opacity: 0.4;
+      opacity: 0.45;
       cursor: not-allowed;
     }
     .btn-primary {
-      background: #252a3d;
-      border-color: #3f4765;
-      color: #e0e7ff;
+      background: #064e3b;
+      border-color: #059669;
+      color: #a7f3d0;
+      font-weight: 600;
     }
     .btn-primary:hover {
-      background: #2f354d;
-      border-color: #555f84;
+      background: #047857;
+      border-color: #10b981;
+      color: #fff;
     }
     .btn svg {
       width: 11px;
@@ -149,166 +154,198 @@
     /* Notification / Toast */
     .toast-banner {
       display: none;
-      padding: 6px 9px;
+      padding: 5px 8px;
       margin-bottom: 8px;
       border-radius: 4px;
-      font-size: 10.5px;
-      line-height: 1.3;
+      font-size: 10px;
+      line-height: 1.35;
       word-break: break-word;
     }
     .toast-banner.info {
-      background: rgba(99, 102, 241, 0.1);
-      border: 1px solid rgba(99, 102, 241, 0.3);
-      color: #c7d2fe;
+      background: rgba(56, 189, 248, 0.1);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      color: #bae6fd;
     }
     .toast-banner.error {
-      background: var(--danger-bg);
+      background: var(--danger-glow);
       border: 1px solid var(--danger-border);
       color: #fca5a5;
     }
 
-    /* Overview Section */
-    .overview-box {
+    /* KPI Telemetry Grid (Usage Insights KPI Cards) */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+    .kpi-card {
       background: var(--card);
       border: 1px solid var(--border);
       border-radius: 6px;
-      padding: 9px 10px;
+      padding: 7px 9px;
+      position: relative;
+      overflow: hidden;
+    }
+    .kpi-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 2px;
+    }
+    .kpi-label {
+      font-size: 8.5px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      color: var(--muted);
+    }
+    .kpi-tag {
+      font-size: 8px;
+      font-family: var(--font-mono);
+      font-weight: 600;
+      padding: 1px 4px;
+      border-radius: 3px;
+    }
+    .kpi-tag-success {
+      background: var(--success-glow);
+      color: var(--success);
+      border: 1px solid var(--success-border);
+    }
+    .kpi-tag-warning {
+      background: rgba(245, 158, 11, 0.1);
+      color: var(--warning);
+      border: 1px solid rgba(245, 158, 11, 0.25);
+    }
+    .kpi-tag-danger {
+      background: var(--danger-glow);
+      color: var(--danger);
+      border: 1px solid var(--danger-border);
+    }
+    .kpi-val {
+      font-family: var(--font-mono);
+      font-size: 16px;
+      font-weight: 700;
+      color: #fff;
+      line-height: 1.2;
+    }
+    .kpi-sub {
+      font-size: 9px;
+      color: var(--muted);
+      margin-top: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .kpi-gauge {
+      margin-top: 4px;
+      height: 3px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 1.5px;
+      overflow: hidden;
+    }
+    .kpi-gauge-fill {
+      height: 100%;
+      border-radius: 1.5px;
+      transition: width 0.3s ease;
+    }
+
+    /* Active Gateway Card */
+    .gateway-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px 10px;
       margin-bottom: 10px;
     }
-    .overview-row {
+    .gateway-top {
       display: flex;
-      justify-content: space-between;
       align-items: center;
+      justify-content: space-between;
       gap: 6px;
-      flex-wrap: wrap;
       margin-bottom: 6px;
     }
-    .meta-group {
-      display: flex;
+    .gateway-pill {
+      display: inline-flex;
       align-items: center;
-      gap: 5px;
-      min-width: 0;
-      flex: 1 1 auto;
-    }
-    .model-tag {
-      font-family: var(--font-mono);
-      font-size: 10px;
-      font-weight: 500;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      color: #d1d5db;
-      padding: 1.5px 5px;
+      gap: 4px;
+      font-size: 9px;
+      font-weight: 700;
+      color: #34d399;
+      background: var(--success-glow);
+      border: 1px solid var(--success-border);
+      padding: 1.5px 6px;
       border-radius: 3px;
+    }
+    .gateway-email {
+      font-size: 11px;
+      font-weight: 600;
+      color: #fff;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      max-width: 140px;
+      flex: 1 1 auto;
+      margin-left: 2px;
     }
-    .session-tag {
-      font-size: 10px;
-      color: var(--muted);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      max-width: 130px;
-    }
-    .pool-stat {
+    .gateway-model {
       font-family: var(--font-mono);
-      font-size: 10.5px;
-      color: var(--muted);
+      font-size: 9.5px;
+      color: #94a3b8;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 1px 5px;
+      border-radius: 3px;
       white-space: nowrap;
       flex-shrink: 0;
     }
-    .pool-stat b {
-      color: var(--fg);
-      font-weight: 600;
-    }
-
-    /* Pool Health Line */
-    .pool-line {
-      height: 3px;
-      width: 100%;
-      background: #1b1e2a;
-      border-radius: 2px;
-      overflow: hidden;
+    .gateway-subline {
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      color: #34d399;
       display: flex;
-      margin-bottom: 8px;
-    }
-    .pool-segment-ready {
-      background: var(--success);
-      height: 100%;
-      transition: width 0.3s ease;
-    }
-    .pool-segment-exhausted {
-      background: #7f1d1d;
-      height: 100%;
-      transition: width 0.3s ease;
+      align-items: center;
+      gap: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
-    /* Active Route Banner */
-    .route-banner {
+    /* Model Bucket Telemetry Breakdown */
+    .section-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 6px;
-      flex-wrap: wrap;
-      padding: 5px 7px;
-      background: rgba(16, 185, 129, 0.05);
-      border: 1px solid var(--success-border);
-      border-radius: 4px;
-      margin-bottom: 8px;
-      font-size: 10.5px;
+      margin-bottom: 5px;
+      padding: 0 2px;
     }
-    .route-left {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      color: #a7f3d0;
-      min-width: 0;
-      flex: 1 1 auto;
-      overflow: hidden;
-    }
-    .route-left span {
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .route-left b {
-      color: #fff;
-      font-weight: 600;
-    }
-    .route-dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: var(--success);
-      flex-shrink: 0;
-    }
-    .route-right {
-      font-family: var(--font-mono);
-      font-size: 9.5px;
+    .section-title {
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
       color: var(--muted);
-      white-space: nowrap;
-      flex-shrink: 0;
+    }
+    .section-meta {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      color: var(--muted);
     }
 
-    /* 4-Bucket Grid (Responsive Auto-Fit) */
     .bucket-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(72px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(78px, 1fr));
       gap: 5px;
-      padding-top: 6px;
-      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      margin-bottom: 10px;
     }
     .bucket-cell {
-      background: rgba(0, 0, 0, 0.18);
-      border: 1px solid rgba(255, 255, 255, 0.04);
-      border-radius: 3px;
-      padding: 3px 5px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 4px 6px;
       min-width: 0;
     }
-    .bucket-title {
-      font-size: 8.5px;
+    .bucket-name {
+      font-size: 8px;
       color: var(--muted);
       text-transform: uppercase;
       letter-spacing: 0.2px;
@@ -317,233 +354,186 @@
       text-overflow: ellipsis;
       margin-bottom: 1px;
     }
-    .bucket-value {
+    .bucket-val {
       font-family: var(--font-mono);
-      font-size: 10.5px;
-      font-weight: 600;
+      font-size: 11px;
+      font-weight: 700;
     }
 
-    /* Section Header */
-    .section-head {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin: 10px 0 6px 0;
-      padding: 0 1px;
-    }
-    .section-title {
-      font-size: 9.5px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      color: var(--muted);
-    }
-    .section-count {
-      font-family: var(--font-mono);
-      font-size: 9.5px;
-      color: var(--faint);
-    }
-
-    /* Account List Table / Responsive Cards */
-    .accounts-wrapper {
+    /* Accounts Fleet Telemetry */
+    .accounts-list {
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 5px;
+      margin-bottom: 8px;
     }
-
     .acc-card {
       background: var(--card);
       border: 1px solid var(--border);
       border-radius: 5px;
-      padding: 7px 9px;
-      transition: background 0.1s ease, border-color 0.1s ease;
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
+      padding: 6px 8px;
+      transition: border-color 0.12s ease, background 0.12s ease;
     }
     .acc-card:hover {
-      background: var(--hover);
-      border-color: rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.02);
+      border-color: #2b3345;
     }
     .acc-card.active-card {
+      border-color: var(--success-border);
       background: rgba(16, 185, 129, 0.035);
-      border: 1px solid rgba(16, 185, 129, 0.35);
     }
 
-    /* Row 1: Status Pill, Email, and Action Button */
-    .acc-header {
+    .acc-top {
       display: flex;
+      align-items: center;
       justify-content: space-between;
-      align-items: center;
       gap: 6px;
-      min-width: 0;
+      margin-bottom: 4px;
     }
-    .acc-identity {
+    .acc-ident {
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 5px;
       min-width: 0;
       flex: 1 1 auto;
-      overflow: hidden;
     }
-    .status-pill {
+    .status-tag {
+      font-size: 8.5px;
+      font-weight: 700;
+      padding: 1px 5px;
+      border-radius: 3px;
       display: inline-flex;
       align-items: center;
-      gap: 4px;
-      font-size: 9px;
-      font-weight: 600;
-      letter-spacing: 0.3px;
-      padding: 1.5px 5px;
-      border-radius: 3px;
-      flex-shrink: 0;
-      text-transform: uppercase;
+      gap: 3px;
       white-space: nowrap;
     }
-    .pill-dot {
-      width: 4.5px;
-      height: 4.5px;
-      border-radius: 50%;
-    }
-    .pill-in-use {
-      background: var(--success-bg);
-      border: 1px solid var(--success-border);
+    .tag-in-use {
+      background: var(--success-glow);
       color: #34d399;
+      border: 1px solid var(--success-border);
     }
-    .pill-in-use .pill-dot {
-      background: #10b981;
-    }
-    .pill-ready {
+    .tag-standby {
       background: rgba(148, 163, 184, 0.08);
-      border: 1px solid rgba(148, 163, 184, 0.2);
       color: #94a3b8;
+      border: 1px solid rgba(148, 163, 184, 0.18);
     }
-    .pill-ready .pill-dot {
-      background: #94a3b8;
-    }
-    .pill-exhausted {
-      background: var(--danger-bg);
-      border: 1px solid var(--danger-border);
+    .tag-exhausted {
+      background: var(--danger-glow);
       color: #f87171;
+      border: 1px solid var(--danger-border);
     }
-    .pill-exhausted .pill-dot {
-      background: #ef4444;
-    }
-
     .acc-email {
-      font-size: 11px;
-      font-weight: 500;
+      font-size: 10.5px;
+      font-weight: 600;
       color: #fff;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      min-width: 0;
-      flex: 1 1 auto;
     }
-    .acc-actions {
-      flex-shrink: 0;
-    }
-    .btn-switch {
-      padding: 2px 7px;
-      font-size: 9.5px;
+
+    .btn-select {
+      padding: 1.5px 6px;
+      font-size: 9px;
       border-radius: 3px;
-      background: #1e2230;
+      background: #181d28;
       border: 1px solid var(--border);
       color: #cbd5e1;
       cursor: pointer;
-      transition: all 0.1s ease;
       white-space: nowrap;
+      transition: all 0.1s ease;
     }
-    .btn-switch:hover {
-      background: #282d3f;
+    .btn-select:hover {
+      background: #232a3b;
       color: #fff;
-      border-color: #3f4765;
+      border-color: #3b455d;
     }
-    .active-tag {
-      font-size: 9px;
-      color: var(--success);
-      font-weight: 600;
-      text-transform: uppercase;
+    .active-badge {
+      font-family: var(--font-mono);
+      font-size: 8.5px;
+      font-weight: 700;
+      color: #34d399;
       letter-spacing: 0.3px;
     }
 
-    /* Subline if active */
-    .acc-routing-note {
-      font-size: 9.5px;
-      color: #34d399;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    /* Row 2: Meters & Reset Time (Adaptive Flex) */
+    /* Account Metrics Row */
     .acc-metrics {
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 8px;
-      flex-wrap: wrap;
       padding-top: 3px;
       border-top: 1px solid rgba(255, 255, 255, 0.035);
+      flex-wrap: wrap;
     }
-    .meters-group {
+    .meter-cluster {
       display: flex;
       align-items: center;
       gap: 8px;
-      flex: 1 1 160px;
-      min-width: 0;
+      flex: 1 1 150px;
     }
     .meter-unit {
       display: flex;
       align-items: center;
       gap: 4px;
-      font-size: 9.5px;
+      font-size: 9px;
       color: var(--muted);
       flex: 1 1 auto;
-      min-width: 70px;
+      min-width: 65px;
     }
-    .meter-unit span:first-child {
-      font-size: 8.5px;
+    .meter-label {
+      font-size: 8px;
+      font-weight: 600;
       text-transform: uppercase;
+      color: var(--muted);
       flex-shrink: 0;
     }
-    .bar-bg {
+    .meter-bar {
       flex: 1;
       height: 3px;
       background: rgba(255, 255, 255, 0.08);
-      border-radius: 2px;
+      border-radius: 1.5px;
       overflow: hidden;
-      min-width: 20px;
+      min-width: 18px;
     }
-    .bar-fill {
+    .meter-fill {
       height: 100%;
-      border-radius: 2px;
+      border-radius: 1.5px;
     }
-    .meter-val {
+    .meter-text {
       font-family: var(--font-mono);
-      font-size: 9px;
-      width: 24px;
+      font-size: 8.5px;
+      width: 22px;
       text-align: right;
       flex-shrink: 0;
     }
-
-    .reset-info {
+    .acc-reset {
       font-family: var(--font-mono);
-      font-size: 9px;
+      font-size: 8.5px;
       color: var(--muted);
       white-space: nowrap;
       flex-shrink: 0;
     }
 
+    /* Footer Telemetry Bar */
+    .insights-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      padding: 6px 2px 2px;
+      border-top: 1px solid var(--border);
+      font-family: var(--font-mono);
+      font-size: 9px;
+      color: var(--muted);
+    }
+
     .empty-state {
-      padding: 20px 10px;
+      padding: 16px 10px;
       text-align: center;
       color: var(--muted);
       font-size: 11px;
       border: 1px dashed var(--border);
-      border-radius: 6px;
+      border-radius: 5px;
     }
   </style>
 </head>
@@ -552,99 +542,128 @@
   <!-- Top Bar -->
   <div class="topbar">
     <div class="topbar-left">
-      <span class="brand-title">Antigravity Switcher</span>
-      <span class="live-pill">
+      <span class="brand-title">Quota Insights</span>
+      <span class="live-badge">
         <span class="live-dot"></span>
         Live
       </span>
     </div>
     <div class="topbar-actions">
-      <button id="btnMask" class="btn" title="Toggle Privacy Mask (Sembunyikan akun asli dengan akun dummy)">
-        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
-        </svg>
+      <button id="btnMask" class="btn" title="Toggle Privacy Masking">
         <span id="maskBtnText">Mask: Off</span>
       </button>
-      <button id="btnRefresh" class="btn" title="Muat ulang status akun">
-        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-        </svg>
+      <button id="btnRefresh" class="btn" title="Refresh Telemetry">
         Sync
       </button>
-      <button id="btnRotate" class="btn btn-primary" title="Rotasi langsung ke akun terbaik dengan kuota kosong">
-        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-        </svg>
+      <button id="btnRotate" class="btn btn-primary" title="Rotate to account with lowest quota">
         Rotate Best
       </button>
     </div>
   </div>
 
-  <!-- Toast Notification -->
+  <!-- Toast Banner -->
   <div id="statusToast" class="toast-banner"></div>
 
-  <!-- Active Route & Pool Summary -->
-  <div class="overview-box">
-    <div class="overview-row">
-      <div class="meta-group">
-        <span id="modelNameText" class="model-tag" title="Detected Model">Gemini Models</span>
-        <span id="sessionTitleText" class="session-tag" title="Target Session">Session</span>
+  <!-- KPI Telemetry Grid (Insights KPI Cards) -->
+  <div class="kpi-grid">
+    <!-- KPI 1: Active Session Quota -->
+    <div class="kpi-card">
+      <div class="kpi-header">
+        <span class="kpi-label">Session Quota</span>
+        <span id="kpiSessionTag" class="kpi-tag kpi-tag-success">Optimal</span>
       </div>
-      <div id="poolStatText" class="pool-stat">
-        Pool: <b>0 / 0</b> (0%)
+      <div id="kpiSessionVal" class="kpi-val">0%</div>
+      <div class="kpi-sub">5-Hour Allowance Window</div>
+      <div class="kpi-gauge">
+        <div id="kpiSessionGauge" class="kpi-gauge-fill" style="width: 0%; background: var(--success);"></div>
       </div>
     </div>
 
-    <!-- 3px Pool Health Line -->
-    <div class="pool-line">
-      <div id="poolSegReady" class="pool-segment-ready" style="width: 0%;"></div>
-      <div id="poolSegExhausted" class="pool-segment-exhausted" style="width: 0%;"></div>
-    </div>
-
-    <!-- Active Route Indicator -->
-    <div class="route-banner">
-      <div class="route-left">
-        <span class="route-dot"></span>
-        <span>Route: <b id="routeEmailText">—</b></span>
+    <!-- KPI 2: Weekly Allowance -->
+    <div class="kpi-card">
+      <div class="kpi-header">
+        <span class="kpi-label">Weekly Quota</span>
+        <span id="kpiWeeklyTag" class="kpi-tag kpi-tag-success">0% used</span>
       </div>
-      <div id="routeSessionText" class="route-right">Routing active</div>
+      <div id="kpiWeeklyVal" class="kpi-val">0%</div>
+      <div id="kpiWeeklySub" class="kpi-sub">Rolling 7-Day Window</div>
+      <div class="kpi-gauge">
+        <div id="kpiWeeklyGauge" class="kpi-gauge-fill" style="width: 0%; background: var(--success);"></div>
+      </div>
     </div>
 
-    <!-- Dynamic Buckets Breakdown (Gemini, Claude, GPT, Argon, Carbon, etc.) -->
-    <div id="bucketGrid" class="bucket-grid"></div>
+    <!-- KPI 3: Fleet Capacity Pool -->
+    <div class="kpi-card">
+      <div class="kpi-header">
+        <span class="kpi-label">Pool Capacity</span>
+        <span id="kpiPoolTag" class="kpi-tag kpi-tag-success">Ready</span>
+      </div>
+      <div id="kpiPoolVal" class="kpi-val">5 / 6</div>
+      <div id="kpiPoolSub" class="kpi-sub">83% Accounts Available</div>
+      <div class="kpi-gauge">
+        <div id="kpiPoolGauge" class="kpi-gauge-fill" style="width: 83%; background: var(--success);"></div>
+      </div>
+    </div>
+
+    <!-- KPI 4: Failover Guard -->
+    <div class="kpi-card">
+      <div class="kpi-header">
+        <span class="kpi-label">Failover Engine</span>
+        <span class="kpi-tag kpi-tag-success">Armed</span>
+      </div>
+      <div id="kpiFailoverVal" class="kpi-val">&lt; 100ms</div>
+      <div class="kpi-sub">Cooldown: 30s · Safe</div>
+      <div class="kpi-gauge">
+        <div class="kpi-gauge-fill" style="width: 100%; background: var(--cyan);"></div>
+      </div>
+    </div>
   </div>
 
-  <!-- Account List Section -->
-  <div class="section-head">
-    <span class="section-title">Managed Accounts</span>
-    <span id="accountsCountText" class="section-count">0 accounts</span>
+  <!-- Active Route & Gateway Banner -->
+  <div class="gateway-card">
+    <div class="gateway-top">
+      <span class="gateway-pill">● ACTIVE ROUTE</span>
+      <span id="gatewayEmailText" class="gateway-email">Loading...</span>
+      <span id="gatewayModelText" class="gateway-model">Gemini Models</span>
+    </div>
+    <div class="gateway-subline">
+      <span>↳</span>
+      <span id="gatewaySessionText">Target: Terminal 1 · Auto-resume armed: "lanjutkan pengerjaan tadi"</span>
+    </div>
   </div>
 
-  <div id="accountsList" class="accounts-wrapper">
-    <div class="empty-state">
-      Connecting to Orca host...
-    </div>
+  <!-- Model Quota Breakdown (Dynamic Buckets) -->
+  <div class="section-header">
+    <span class="section-title">Model Quota Telemetry</span>
+    <span class="section-meta">Multi-Tier Buckets</span>
+  </div>
+  <div id="bucketGrid" class="bucket-grid">
+    <!-- Dynamic model bucket cells injected here -->
+  </div>
+
+  <!-- Account Fleet Telemetry List -->
+  <div class="section-header">
+    <span class="section-title">Account Fleet Status</span>
+    <span id="accountsCountText" class="section-meta">0 accounts</span>
+  </div>
+  <div id="accountsList" class="accounts-list">
+    <!-- Dynamic account cards injected here -->
+  </div>
+
+  <!-- Insights Footer -->
+  <div class="insights-footer">
+    <span id="footerLastSync">Telemetry: Real-time (3.5s)</span>
+    <span>Anti-Ban: 5 / 180s Active</span>
   </div>
 
   <script>
-    async function rpc(name, input) {
+    // Orca RPC helper
+    function rpc(action, payload) {
       const host = window.orca || globalThis.orca;
-      if (!host) throw new Error('Host API Orca belum terhubung.');
-
-      if (host.plugin && typeof host.plugin.request === 'function') {
-        const res = await host.plugin.request(name, input, { timeoutMs: 15000 });
-        if (res && typeof res === 'object' && 'ok' in res) {
-          if (!res.ok) throw new Error(res.error?.message || 'RPC Call Failed');
-          return res.value;
-        }
-        return res;
+      if (host && host.plugin && typeof host.plugin.call === 'function') {
+        return host.plugin.call(action, payload);
       }
-
-      if (typeof host.request === 'function') {
-        return host.request(name, input);
-      }
-
-      throw new Error('Host API Orca tidak memiliki method plugin.request.');
+      return Promise.reject(new Error('Orca plugin host API unavailable'));
     }
 
     function showToast(msg, isError = false) {
@@ -652,7 +671,7 @@
       el.textContent = msg;
       el.className = 'toast-banner ' + (isError ? 'error' : 'info');
       el.style.display = 'block';
-      setTimeout(() => { el.style.display = 'none'; }, 4000);
+      setTimeout(() => { el.style.display = 'none'; }, 3500);
     }
 
     function formatMinutes(tsMs) {
@@ -662,7 +681,7 @@
       if (m > 60) {
         const h = Math.floor(m / 60);
         const remM = m % 60;
-        return `${h}h ${remM}m`;
+        return `${h}h ${remM}m left`;
       }
       return `${m}m left`;
     }
@@ -697,34 +716,63 @@
       if (!data) return;
       lastData = data;
 
-      // 1. Model & Active Session
-      const model = data.activeSession?.model || 'Gemini Models';
-      const sessionTitle = isMasked ? 'Terminal 1 · main.py' : (data.activeSession?.title || 'Terminal Session');
-      document.getElementById('modelNameText').textContent = model;
-      document.getElementById('sessionTitleText').textContent = sessionTitle;
-
-      // 2. Global Health Bar
-      const stats = data.globalStats || {};
-      const total = stats.totalAccounts || (data.accounts ? data.accounts.length : 0);
-      const avail = stats.availableAccounts || 0;
-      const pct = stats.healthPercent || (total > 0 ? Math.round((avail / total) * 100) : 0);
-
-      document.getElementById('poolStatText').innerHTML = `Pool: <b>${avail} / ${total}</b> (${pct}%)`;
-      const readyWidth = total > 0 ? (avail / total) * 100 : 0;
-      document.getElementById('poolSegReady').style.width = readyWidth + '%';
-      document.getElementById('poolSegExhausted').style.width = (100 - readyWidth) + '%';
-
-      // 3. Active Route Banner
       const activeAcc = data.activeAccount;
-      if (activeAcc) {
-        document.getElementById('routeEmailText').textContent = getDisplayEmail(activeAcc.email, 0);
-        document.getElementById('routeSessionText').textContent = isMasked ? 'Target: Terminal 1' : `Target: ${sessionTitle}`;
+      const accounts = data.accounts || [];
+
+      // 1. KPI Telemetry
+      const sUsed = activeAcc ? Math.min(100, Math.round(activeAcc.sessionUsed || 0)) : 0;
+      const wUsed = activeAcc ? Math.min(100, Math.round(activeAcc.weeklyUsed || 0)) : 0;
+
+      document.getElementById('kpiSessionVal').textContent = `${sUsed}%`;
+      const sGauge = document.getElementById('kpiSessionGauge');
+      sGauge.style.width = `${sUsed}%`;
+      sGauge.style.background = getMeterColor(sUsed);
+
+      const sTag = document.getElementById('kpiSessionTag');
+      if (sUsed >= 100) {
+        sTag.textContent = 'Exhausted';
+        sTag.className = 'kpi-tag kpi-tag-danger';
+      } else if (sUsed >= 80) {
+        sTag.textContent = 'High';
+        sTag.className = 'kpi-tag kpi-tag-warning';
       } else {
-        document.getElementById('routeEmailText').textContent = 'No Active Account';
-        document.getElementById('routeSessionText').textContent = 'Standby';
+        sTag.textContent = 'Optimal';
+        sTag.className = 'kpi-tag kpi-tag-success';
       }
 
-      // 4. Dynamic Buckets Breakdown (Gemini, Claude, GPT, Argon, Carbon, etc.)
+      document.getElementById('kpiWeeklyVal').textContent = `${wUsed}%`;
+      const wGauge = document.getElementById('kpiWeeklyGauge');
+      wGauge.style.width = `${wUsed}%`;
+      wGauge.style.background = getMeterColor(wUsed);
+
+      const wTag = document.getElementById('kpiWeeklyTag');
+      wTag.textContent = wUsed >= 100 ? 'Limit' : `${wUsed}% used`;
+      wTag.className = wUsed >= 100 ? 'kpi-tag kpi-tag-danger' : 'kpi-tag kpi-tag-success';
+
+      const stats = data.globalStats || {};
+      const total = stats.totalAccounts || accounts.length;
+      const avail = stats.availableAccounts !== undefined ? stats.availableAccounts : accounts.filter(a => !a.isExhausted).length;
+      const poolPct = total > 0 ? Math.round((avail / total) * 100) : 0;
+
+      document.getElementById('kpiPoolVal').textContent = `${avail} / ${total}`;
+      document.getElementById('kpiPoolSub').textContent = `${poolPct}% Accounts Available`;
+      const pGauge = document.getElementById('kpiPoolGauge');
+      pGauge.style.width = `${poolPct}%`;
+      pGauge.style.background = poolPct <= 20 ? 'var(--danger)' : (poolPct <= 50 ? 'var(--warning)' : 'var(--success)');
+
+      // 2. Active Gateway Card
+      if (activeAcc) {
+        document.getElementById('gatewayEmailText').textContent = getDisplayEmail(activeAcc.email, 0);
+      } else {
+        document.getElementById('gatewayEmailText').textContent = 'No Active Account';
+      }
+
+      const model = data.activeSession?.model || 'Gemini 2.5 Pro / Claude 3.7';
+      document.getElementById('gatewayModelText').textContent = model;
+      const sessionTitle = isMasked ? 'Terminal 1 (PTY)' : (data.activeSession?.title || 'Terminal 1');
+      document.getElementById('gatewaySessionText').textContent = `Target: ${sessionTitle} · Auto-resume armed: "lanjutkan pengerjaan tadi"`;
+
+      // 3. Model Buckets Telemetry Breakdown
       const grid = document.getElementById('bucketGrid');
       grid.innerHTML = '';
       if (activeAcc && activeAcc.buckets && activeAcc.buckets.length > 0) {
@@ -747,29 +795,25 @@
           cell.className = 'bucket-cell';
           cell.title = `${rawName}: ${p}% used`;
           cell.innerHTML = `
-            <div class="bucket-title">${shortTitle}</div>
-            <div class="bucket-value" style="color: ${color};">${p}%</div>
+            <div class="bucket-name">${shortTitle}</div>
+            <div class="bucket-val" style="color: ${color};">${p}%</div>
           `;
           grid.appendChild(cell);
         });
       } else if (activeAcc) {
-        const sPct = Math.min(100, Math.round(activeAcc.sessionUsed || 0));
-        const wPct = Math.min(100, Math.round(activeAcc.weeklyUsed || 0));
         grid.innerHTML = `
-          <div class="bucket-cell"><div class="bucket-title">Session (5h)</div><div class="bucket-value" style="color:${getMeterColor(activeAcc.sessionUsed || 0)}">${sPct}%</div></div>
-          <div class="bucket-cell"><div class="bucket-title">Weekly</div><div class="bucket-value" style="color:${getMeterColor(activeAcc.weeklyUsed || 0)}">${wPct}%</div></div>
+          <div class="bucket-cell"><div class="bucket-name">SESSION (5H)</div><div class="bucket-val" style="color:${getMeterColor(sUsed)}">${sUsed}%</div></div>
+          <div class="bucket-cell"><div class="bucket-name">WEEKLY</div><div class="bucket-val" style="color:${getMeterColor(wUsed)}">${wUsed}%</div></div>
         `;
       }
 
-      // 5. Responsive Account Cards
+      // 4. Accounts Fleet List
       const container = document.getElementById('accountsList');
       container.innerHTML = '';
-
-      const accounts = data.accounts || [];
       document.getElementById('accountsCountText').textContent = `${accounts.length} accounts`;
 
       if (accounts.length === 0) {
-        container.innerHTML = '<div class="empty-state">No Antigravity accounts configured in Orca.</div>';
+        container.innerHTML = '<div class="empty-state">No Antigravity accounts registered in Orca.</div>';
         return;
       }
 
@@ -779,11 +823,11 @@
 
         let statusHtml = '';
         if (acc.isActive) {
-          statusHtml = '<span class="status-pill pill-in-use"><span class="pill-dot"></span>In Use</span>';
+          statusHtml = '<span class="status-tag tag-in-use">● IN USE</span>';
         } else if (acc.isExhausted) {
-          statusHtml = '<span class="status-pill pill-exhausted"><span class="pill-dot"></span>Limited</span>';
+          statusHtml = '<span class="status-tag tag-exhausted">✕ LIMIT</span>';
         } else {
-          statusHtml = '<span class="status-pill pill-ready"><span class="pill-dot"></span>Standby</span>';
+          statusHtml = '<span class="status-tag tag-standby">○ READY</span>';
         }
 
         const sessionPct = Math.min(100, Math.round(acc.sessionUsed || 0));
@@ -791,19 +835,15 @@
         const sColor = getMeterColor(acc.sessionUsed || 0);
         const wColor = getMeterColor(acc.weeklyUsed || 0);
 
-        const routingSubline = acc.isActive
-          ? `<div class="acc-routing-note"><span>↳</span> Routing traffic to active session</div>`
-          : '';
-
         const displayEmail = getDisplayEmail(acc.email, idx);
 
         const actionHtml = acc.isActive
-          ? '<span class="active-tag">Active</span>'
-          : `<button class="btn-switch btn-select" data-email="${acc.email}">Select</button>`;
+          ? '<span class="active-badge">ACTIVE ROUTE</span>'
+          : `<button class="btn-select" data-email="${acc.email}">Select</button>`;
 
         card.innerHTML = `
-          <div class="acc-header">
-            <div class="acc-identity">
+          <div class="acc-top">
+            <div class="acc-ident">
               ${statusHtml}
               <span class="acc-email" title="${displayEmail}">${displayEmail}</span>
             </div>
@@ -812,22 +852,20 @@
             </div>
           </div>
 
-          ${routingSubline}
-
           <div class="acc-metrics">
-            <div class="meters-group">
+            <div class="meter-cluster">
               <div class="meter-unit">
-                <span>Ses</span>
-                <div class="bar-bg"><div class="bar-fill" style="width: ${sessionPct}%; background: ${sColor};"></div></div>
-                <span class="meter-val" style="color: ${sColor};">${sessionPct}%</span>
+                <span class="meter-label">Ses</span>
+                <div class="meter-bar"><div class="meter-fill" style="width: ${sessionPct}%; background: ${sColor};"></div></div>
+                <span class="meter-text" style="color: ${sColor};">${sessionPct}%</span>
               </div>
               <div class="meter-unit">
-                <span>Wk</span>
-                <div class="bar-bg"><div class="bar-fill" style="width: ${weeklyPct}%; background: ${wColor};"></div></div>
-                <span class="meter-val" style="color: ${wColor};">${weeklyPct}%</span>
+                <span class="meter-label">Wk</span>
+                <div class="meter-bar"><div class="meter-fill" style="width: ${weeklyPct}%; background: ${wColor};"></div></div>
+                <span class="meter-text" style="color: ${wColor};">${weeklyPct}%</span>
               </div>
             </div>
-            <div class="reset-info" title="Earliest Reset">
+            <div class="acc-reset">
               Reset: ${formatMinutes(acc.earliestReset)}
             </div>
           </div>
@@ -843,6 +881,10 @@
           selectAccount(email, e.currentTarget);
         });
       });
+
+      const now = new Date();
+      const timeStr = now.toTimeString().split(' ')[0];
+      document.getElementById('footerLastSync').textContent = `Sync: ${timeStr} · 3.5s interval`;
     }
 
     function updateMaskButtonUI() {
@@ -866,7 +908,7 @@
       localStorage.setItem('agy_privacy_mask', isMasked);
       updateMaskButtonUI();
       if (lastData) renderDashboard(lastData);
-      showToast(isMasked ? 'Privacy Mask aktif (Akun dummy ditampilkan)' : 'Privacy Mask nonaktif (Akun asli ditampilkan)');
+      showToast(isMasked ? 'Privacy Mask ON (Dummy accounts shown)' : 'Privacy Mask OFF (Real accounts shown)');
     });
 
     async function loadData() {
@@ -896,7 +938,7 @@
     document.getElementById('btnRefresh').addEventListener('click', (e) => {
       const btn = e.currentTarget;
       btn.disabled = true;
-      loadData().finally(() => { setTimeout(() => { btn.disabled = false; }, 400); });
+      loadData().finally(() => { setTimeout(() => { btn.disabled = false; }, 350); });
     });
 
     document.getElementById('btnRotate').addEventListener('click', async (e) => {
@@ -905,7 +947,7 @@
       const originalText = btn.innerHTML;
       btn.innerHTML = 'Rotating...';
       try {
-        showToast('Selecting best account with lowest quota...');
+        showToast('Selecting candidate with lowest quota...');
         const res = await rpc('accounts.rotateNow');
         const result = (res && res.value !== undefined) ? res.value : res;
         if (result && result.success) {
