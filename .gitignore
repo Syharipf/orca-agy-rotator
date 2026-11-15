@@ -1,3 +1,6 @@
 __pycache__/
 *.py[cod]
 *.lock
+.orca/shots/
+images/panel_*.png
+images/screenshot*.png
