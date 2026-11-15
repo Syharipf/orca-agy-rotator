@@ -1,0 +1,36 @@
+{
+  "log_check_interval": 1.0,
+  "quota_check_interval": 20.0,
+  "cooldown_seconds": 30.0,
+  "circuit_breaker_max_switches": 5,
+  "circuit_breaker_window_seconds": 180.0,
+  "rotation_strategy": "smart_quota",
+  "auto_resume": true,
+  "resume_delay_seconds": 2.0,
+  "resume_command": "lanjutkan pengerjaan tadi",
+  "target_terminal": null,
+  "notifications_enabled": true,
+  "notification_app_name": "Orca ADE Rotator",
+  "log_files": [
+    "~/.config/orca/logs/main.trace.ndjson",
+    "~/.config/orca/logs/daemon.log"
+  ],
+  "monitor_brain_transcripts": true,
+  "brain_dir": "~/.config/orca/antigravity-chat/antigravity-acp/brain",
+  "rate_limit_patterns": [
+    "RESOURCE_EXHAUSTED",
+    "429\\s+Too\\s+Many\\s+Requests",
+    "HTTP\\s+429",
+    "\"code\":\\s*429",
+    "status_code\\s*:\\s*429",
+    "Quota\\s+exceeded",
+    "quota_exceeded",
+    "Rate\\s+limit\\s+exceeded",
+    "rate_limit_exceeded",
+    "Resource\\s+has\\s+been\\s+exhausted",
+    "exceeded\\s+your\\s+current\\s+quota",
+    "Five\\s+Hour\\s+Limit\\s+Remaining.*(?:exhausted|exceeded|0%)",
+    "Weekly\\s+Limit\\s+Remaining.*(?:exhausted|exceeded|0%)"
+  ],
+  "lock_file": "/tmp/orca-agy-rotator.lock"
+}

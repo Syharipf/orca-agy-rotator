@@ -1,0 +1,16 @@
+[Unit]
+Description=Orca ADE Antigravity Auto-Switcher Daemon
+After=graphical-session.target network.target
+PartOf=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 %h/Projects/agy\x20auto\x20switch/main.py run
+WorkingDirectory=%h/Projects/agy auto switch
+Restart=always
+RestartSec=5
+Environment="DISPLAY=:0"
+Environment="DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/%U/bus"
+
+[Install]
+WantedBy=default.target
