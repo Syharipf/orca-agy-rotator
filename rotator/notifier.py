@@ -65,36 +65,34 @@ class Notifier:
 
     def notify_switch(self, old_email: str, new_email: str, reason: str, dry_run: bool = False):
         prefix = "[DRY-RUN] " if dry_run else ""
-        title = f"{prefix}Rotasi Akun Antigravity"
-        msg = f"Limit terdeteksi pada {old_email or 'akun aktif'}.\nBeralih ke: {new_email}\nAlasan: {reason}"
+        title = f"{prefix}Akun Dirotasi"
+        msg = f"Beralih ke: {new_email}"
         self._send(title, msg, urgency="normal", icon="dialog-ok")
 
     def notify_all_exhausted(self, earliest_reset_info: Optional[str] = None):
-        title = "Peringatan: Semua Akun Limit!"
-        msg = "Seluruh akun Antigravity terdaftar telah mencapai limit kuota (100%)."
-        if earliest_reset_info:
-            msg += f"\nReset terdekat: {earliest_reset_info}"
-        msg += "\nRotasi dijeda sementara untuk keamanan."
+        title = "Semua Akun Limit"
+        reset_txt = f" (Reset: {earliest_reset_info})" if earliest_reset_info else ""
+        msg = f"Semua kuota habis{reset_txt}. Rotasi dijeda."
         self._send(title, msg, urgency="critical", icon="dialog-warning")
 
     def notify_circuit_breaker(self, count: int, window_sec: float):
-        title = "Circuit Breaker Aktif!"
-        msg = f"Terjadi {count} kali rotasi dalam {int(window_sec)} detik.\nRotasi ditahan sementara agar terhindar dari pemblokiran (ban)."
+        title = "Rotasi Ditahan"
+        msg = f"Batas pergantian tercapai ({count}x). Ditahan sementara."
         self._send(title, msg, urgency="critical", icon="dialog-error")
 
     def notify_resume(self, terminal_id: str, prompt: str):
-        title = "Auto-Resume Triggered"
-        msg = f"Perintah resume dikirim ke terminal {terminal_id}:\n\"{prompt}\""
+        title = "Melanjutkan Pengerjaan"
+        msg = f"Sesi terminal {terminal_id} otomatis dilanjutkan."
         self._send(title, msg, urgency="low", icon="media-playback-start")
 
     def notify_service_started(self, active_email: Optional[str] = None):
-        title = "Orca ADE Rotator Aktif"
-        msg = f"Daemon auto-switcher berjalan di background.\nAkun aktif: {active_email or 'Memeriksa...'}"
+        title = "Antigravity Rotator Aktif"
+        msg = f"Akun aktif: {active_email or 'Memeriksa...'}"
         self._send(title, msg, urgency="low", icon="dialog-information")
 
     def notify_service_stopped(self):
-        title = "Orca ADE Rotator Berhenti"
-        msg = "Daemon auto-switcher dihentikan."
+        title = "Antigravity Rotator Berhenti"
+        msg = "Service dihentikan."
         self._send(title, msg, urgency="low", icon="process-stop")
 
     def notify_error(self, err_msg: str):

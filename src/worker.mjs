@@ -218,8 +218,8 @@ export default function activate(orca) {
 
       if (!available.length) {
         await orca.host.call('notifications.show', {
-          title: 'Antigravity: Semua Akun Limit!',
-          body: 'Seluruh akun Antigravity telah mencapai batas kuota 100%. Rotasi dijeda untuk keamanan.',
+          title: 'Semua Akun Limit',
+          body: 'Seluruh kuota akun habis. Menunggu waktu reset.',
         });
         return { success: false, reason: 'Semua akun limit' };
       }
@@ -236,8 +236,8 @@ export default function activate(orca) {
       lastSwitchTime = Date.now();
 
       await orca.host.call('notifications.show', {
-        title: 'Rotasi Akun Antigravity Berhasil',
-        body: `Limit terdeteksi pada ${activeEmail}.\nBeralih ke: ${target.email}`,
+        title: 'Akun Dirotasi',
+        body: `Beralih ke ${target.email}. Melanjutkan pengerjaan...`,
       });
 
       // Settle delay before resuming terminal
