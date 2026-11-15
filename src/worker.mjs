@@ -198,7 +198,7 @@ export default function activate(orca) {
 
   // Register command for command palette / status bar click
   if (orca.commands && orca.commands.register) {
-    orca.commands.register('antigravity.rotate', async () => {
+    orca.commands.register('rotate-now', async () => {
       return rotateToBestAccount('Manual command trigger');
     });
   }

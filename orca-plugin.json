@@ -15,6 +15,14 @@
     "path": "images/cover.png",
     "alt": "Antigravity Auto-Switcher dashboard and rotation monitor in Orca ADE"
   },
+  "screenshots": [
+    {
+      "path": "images/screenshot.png",
+      "alt": "Antigravity Auto-Switcher sidebar panel in Orca ADE showing account quotas and switch actions",
+      "caption": "Account quotas and quick-switch controls right in Orca sidebar",
+      "theme": "dark"
+    }
+  ],
   "engines": {
     "orca": ">=1.4.248"
   },
