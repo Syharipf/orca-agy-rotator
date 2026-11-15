@@ -253,7 +253,7 @@ PartOf=graphical-session.target
 
 [Service]
 Type=simple
-ExecStart={python_bin} {project_dir / 'main.py'} run
+ExecStart={python_bin} "{project_dir / 'main.py'}" run
 WorkingDirectory={project_dir}
 Restart=always
 RestartSec=5
