@@ -10,11 +10,28 @@ import subprocess
 import sys
 import time
 
+import re
+
 from rotator.account_manager import AccountManager, format_ms_timestamp
 from rotator.config import RotatorConfig, DEFAULT_CONFIG_PATH
+from rotator.live_view import run_live_monitor
 from rotator.notifier import Notifier
 from rotator.service import RotatorDaemon
 from rotator.terminal_manager import TerminalManager
+
+ANSI_RE = re.compile(r"\x1b\[[0-9;]*m")
+
+
+def visual_len(s: str) -> int:
+    return len(ANSI_RE.sub("", s))
+
+
+def pad_ansi(s: str, width: int, align: str = "<") -> str:
+    vlen = visual_len(s)
+    pad = max(0, width - vlen)
+    if align == ">":
+        return (" " * pad) + s
+    return s + (" " * pad)
 
 
 logging.basicConfig(
@@ -102,34 +119,55 @@ def cmd_status(args, config: RotatorConfig):
 
 
 def cmd_accounts(args, config: RotatorConfig):
+    if getattr(args, "live", False):
+        run_live_monitor(config)
+        return
+
     mgr = AccountManager()
-    accounts, active_id, _ = mgr.fetch_accounts()
+    accounts, active_id, active_account = mgr.fetch_accounts()
 
     if not accounts:
         print("No managed Antigravity accounts found.")
         return
 
-    print(f"Managed Antigravity accounts ({len(accounts)}):")
+    # Terminal context for routing info
+    term_mgr = TerminalManager()
+    active_term = term_mgr.find_active_terminal()
+    session_title = active_term.title if active_term else "Active Terminal"
+
+    print("=" * 95)
+    print(f" {'STATUS':<14} | {'EMAIL':<34} | {'SESSION':<10} | {'WEEKLY':<10} | {'RESET TERDEKAT'}")
+    print("=" * 95)
     for acc in accounts:
         is_active = (acc.id == active_id)
-        short_id = acc.id[:8]
-        active_mark = " (active)" if is_active else ""
-        email_str = f"{acc.email}{active_mark}"
+        email_str = acc.email
 
-        # Quota tag
+        # Quota tag with 9Router-style in-use indicator
         if is_active:
-            quota_tag = "[ACTIVE]"
+            quota_tag = "\033[1;32m● IN USE\033[0m"
+            prefix = "\033[1;32m▶\033[0m"
+            email_display = f"\033[1m{email_str}\033[0m"
         elif acc.is_exhausted:
-            quota_tag = "[LIMIT]"
+            quota_tag = "\033[31m✕ EXHAUST\033[0m"
+            prefix = " "
+            email_display = f"\033[90m{email_str}\033[0m"
         else:
-            quota_tag = "[READY]"
+            quota_tag = "\033[36m○ READY\033[0m"
+            prefix = " "
+            email_display = email_str
 
         session_pct = f"{min(100, int(acc.session_used * 100))}%"
         weekly_pct = f"{min(100, int(acc.weekly_used * 100))}%"
         reset_str = format_ms_timestamp(acc.earliest_reset_timestamp)
 
-        indicator = "* " if is_active else "  "
-        print(f"{indicator}{short_id}  {email_str:<36}  {quota_tag:<8}  Session: {session_pct:<5}  Weekly: {weekly_pct:<5}  (Reset: {reset_str})")
+        col_status = pad_ansi(f"{prefix} {quota_tag}", 15)
+        col_email = pad_ansi(email_display, 34)
+        print(f" {col_status} | {col_email} | {session_pct:<10} | {weekly_pct:<10} | {reset_str}")
+        if is_active:
+            print(f"  \033[90m╰─\033[0m \033[32mRouting aktif ke:\033[0m \033[1m{session_title}\033[0m (Traffic AI diarahkan ke akun ini)")
+
+    print("=" * 95)
+    print("💡 \033[1mMode Live:\033[0m Jalankan '\033[36m./main.py live\033[0m' atau '\033[36m./main.py accounts -l\033[0m' untuk tampilan real-time terus-menerus.")
 
 
 def cmd_switch(args, config: RotatorConfig):
@@ -294,7 +332,12 @@ def main():
     subparsers.add_parser("status", parents=[base_parser], help="Lihat status daemon, akun aktif, dan terminal")
 
     # accounts command
-    subparsers.add_parser("accounts", parents=[base_parser], help="Tampilkan daftar seluruh akun Antigravity dan kuotanya")
+    p_accounts = subparsers.add_parser("accounts", parents=[base_parser], help="Tampilkan daftar seluruh akun Antigravity dan kuotanya")
+    p_accounts.add_argument("--live", "-l", action="store_true", help="Buka monitor real-time interaktif (tampilan 9Router)")
+
+    # live / watch command (9Router-style live interactive TUI)
+    subparsers.add_parser("live", parents=[base_parser], help="Buka live interactive monitor real-time seperti 9Router")
+    subparsers.add_parser("watch", parents=[base_parser], help="Alias untuk perintah live")
 
     # switch command
     p_switch = subparsers.add_parser("switch", parents=[base_parser], help="Ganti akun Antigravity sekarang")
@@ -327,6 +370,8 @@ def main():
         cmd_status(args, config)
     elif cmd == "accounts":
         cmd_accounts(args, config)
+    elif cmd in ("live", "watch"):
+        run_live_monitor(config)
     elif cmd == "switch":
         cmd_switch(args, config)
     elif cmd == "resume":

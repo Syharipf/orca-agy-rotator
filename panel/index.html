@@ -243,15 +243,46 @@
     }
     .badge {
       font-size: 9.5px;
-      padding: 2px 6px;
+      padding: 2.5px 7px;
       border-radius: 4px;
       font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 0.3px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
     }
-    .badge-active { background: rgba(99, 102, 241, 0.2); color: #818cf8; border: 1px solid #6366f1; }
-    .badge-ready { background: rgba(16, 185, 129, 0.18); color: #34d399; border: 1px solid var(--success); }
+    .badge-in-use {
+      background: rgba(16, 185, 129, 0.2);
+      color: #34d399;
+      border: 1px solid #10b981;
+      box-shadow: 0 0 10px rgba(16, 185, 129, 0.35);
+      font-weight: 700;
+    }
+    .badge-in-use .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #10b981;
+      box-shadow: 0 0 6px #10b981;
+      animation: pulse 1.5s infinite;
+    }
+    .badge-ready { background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.4); }
     .badge-limit { background: rgba(239, 68, 68, 0.18); color: #f87171; border: 1px solid var(--danger); }
+
+    .routing-banner {
+      background: rgba(16, 185, 129, 0.08);
+      border-left: 3px solid #10b981;
+      padding: 5px 8px;
+      margin: 6px 0 8px 0;
+      border-radius: 0 4px 4px 0;
+      font-size: 11px;
+      color: #a7f3d0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .routing-banner b { color: #fff; font-weight: 600; }
 
     .meter-row {
       display: flex;
@@ -496,8 +527,23 @@
         const card = document.createElement('div');
         card.className = 'card' + (acc.isActive ? ' active' : '');
 
-        const badgeClass = acc.isActive ? 'badge-active' : (acc.isExhausted ? 'badge-limit' : 'badge-ready');
-        const badgeText = acc.isActive ? 'Active' : (acc.isExhausted ? 'Exhausted' : 'Ready (0%)');
+        let badgeHtml = '';
+        let routingBannerHtml = '';
+
+        if (acc.isActive) {
+          badgeHtml = '<span class="badge badge-in-use"><span class="dot"></span>● IN USE</span>';
+          const sessionName = data.activeSession?.title || 'Orca Active Session';
+          routingBannerHtml = `
+            <div class="routing-banner">
+              <span>▶</span>
+              <span>Routing aktif pada sesi: <b>${sessionName}</b></span>
+            </div>
+          `;
+        } else if (acc.isExhausted) {
+          badgeHtml = '<span class="badge badge-limit">✕ RATE LIMITED</span>';
+        } else {
+          badgeHtml = '<span class="badge badge-ready">○ STANDBY</span>';
+        }
 
         const sessionPct = Math.round((acc.sessionUsed || 0) * 100);
         const weeklyPct = Math.round((acc.weeklyUsed || 0) * 100);
@@ -508,8 +554,10 @@
         card.innerHTML = `
           <div class="card-head">
             <span class="email">${acc.email}</span>
-            <span class="badge ${badgeClass}">${badgeText}</span>
+            ${badgeHtml}
           </div>
+
+          ${routingBannerHtml}
 
           <div class="meter-row">
             <span class="meter-label">Session</span>
@@ -529,7 +577,7 @@
 
           <div class="card-footer">
             <span>Reset: ${formatMinutes(acc.earliestReset)}</span>
-            ${acc.isActive ? '<span style="color: var(--accent); font-weight: 500;">✓ Sedang Aktif</span>' : `<button class="btn btn-secondary btn-sm btn-select" data-email="${acc.email}">Pilih Akun</button>`}
+            ${acc.isActive ? '<span style="color: #34d399; font-weight: 600;">● Sedang Digunakan</span>' : `<button class="btn btn-secondary btn-sm btn-select" data-email="${acc.email}">Pilih Akun</button>`}
           </div>
         `;
 
