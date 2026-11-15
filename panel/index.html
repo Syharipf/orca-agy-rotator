@@ -1011,8 +1011,13 @@
   // RPC Bridge
   function rpc(action, payload) {
     const host = window.orca || globalThis.orca;
-    if (host && host.plugin && typeof host.plugin.call === 'function') {
-      return host.plugin.call(action, payload);
+    if (host && host.plugin) {
+      if (typeof host.plugin.request === 'function') {
+        return host.plugin.request(action, payload);
+      }
+      if (typeof host.plugin.call === 'function') {
+        return host.plugin.call(action, payload);
+      }
     }
     return Promise.reject(new Error('Orca plugin host API unavailable'));
   }
