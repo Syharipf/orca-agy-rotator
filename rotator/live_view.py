@@ -43,10 +43,21 @@ def format_progress_bar(used_pct: float, width: int = 8) -> str:
     return f"[{bar}]"
 
 
-def run_live_monitor(config: RotatorConfig):
+DUMMY_POOL = [
+    "dev-lead@example.com",
+    "worker-alpha@example.com",
+    "runner-beta@example.com",
+    "agent-gamma@example.com",
+    "backup-ops@example.com",
+    "standby-pool@example.com",
+]
+
+
+def run_live_monitor(config: RotatorConfig, mask: bool = False):
     """Runs a continuous real-time interactive terminal monitor with live hotkeys."""
     mgr = AccountManager()
     term_mgr = TerminalManager()
+    is_masked = mask
 
     # Save original terminal settings for raw mode
     old_settings = None
@@ -77,13 +88,16 @@ def run_live_monitor(config: RotatorConfig):
             # Detect active model
             model_name = "Gemini Models (Antigravity)"
             session_title = active_term.title if active_term else "Standby (No active session)"
-            if active_term and active_term.preview:
+            if is_masked:
+                session_title = "Terminal 1 · main.py"
+            elif active_term and active_term.preview:
                 import re
                 m = re.search(r"(?:Argon(?:\s+[a-z0-9\.-]+)?|Carbon(?:\s+[a-z0-9\.-]+)?|Gemini\s+[0-9\.]+(?:\s+[a-z]+)?|GPT-[0-9\.]+(?:\s+[a-z]+)?|Claude\s+[0-9\.]+(?:\s+[a-z]+)?|o[13](?:-mini|-preview)?|DeepSeek-[a-z0-9\.-]+)", active_term.preview, re.I)
                 if m:
                     model_name = m.group(0).strip()
 
             now_str = datetime.datetime.now().strftime("%H:%M:%S")
+            mask_badge = f"{GREEN}[MASK: ON]{RESET}" if is_masked else f"{GRAY}[MASK: OFF]{RESET}"
 
             # 2. Render Screen Buffer
             out = []
@@ -92,7 +106,7 @@ def run_live_monitor(config: RotatorConfig):
 
             # Header Banner
             out.append(f"{BOLD}┌────────────────────────────────────────────────────────────────────────────────────────┐{RESET}")
-            out.append(f"{BOLD}│  {BRIGHT_GREEN}●{RESET}{BOLD} Orca ADE Antigravity Auto-Switcher · {BRIGHT_CYAN}LIVE MONITOR{RESET}                 {GRAY}{now_str}{RESET}{BOLD}  │{RESET}")
+            out.append(f"{BOLD}│  {BRIGHT_GREEN}●{RESET}{BOLD} Orca ADE Antigravity Auto-Switcher · {BRIGHT_CYAN}LIVE MONITOR{RESET}  {mask_badge}          {GRAY}{now_str}{RESET}{BOLD}  │{RESET}")
             out.append(f"{BOLD}│  Model: {BRIGHT_CYAN}{model_name:<26}{RESET}{BOLD} │ Pool: {GREEN}{avail_acc}/{total_acc} Siap ({health_pct}%){RESET}{BOLD} │ PID: {os.getpid():<10}{BOLD} │{RESET}")
             out.append(f"{BOLD}└────────────────────────────────────────────────────────────────────────────────────────┘{RESET}\n")
 
@@ -105,6 +119,8 @@ def run_live_monitor(config: RotatorConfig):
                 is_active = (acc.id == active_id)
                 short_id = acc.id[:8]
 
+                display_email = DUMMY_POOL[(idx - 1) % len(DUMMY_POOL)] if is_masked else acc.email
+
                 session_used = acc.session_used
                 weekly_used = acc.weekly_used
                 session_pct = f"{int(session_used)}%"
@@ -115,15 +131,15 @@ def run_live_monitor(config: RotatorConfig):
                 if is_active:
                     status_badge = f"{BRIGHT_GREEN}● IN USE{RESET} "
                     prefix = f"{BRIGHT_GREEN}▶{RESET} "
-                    email_styled = f"{BOLD}{acc.email}{RESET}"
+                    email_styled = f"{BOLD}{display_email}{RESET}"
                 elif acc.is_exhausted:
                     status_badge = f"{RED}✕ LIMIT {RESET} "
                     prefix = "  "
-                    email_styled = f"{GRAY}{acc.email}{RESET}"
+                    email_styled = f"{GRAY}{display_email}{RESET}"
                 else:
                     status_badge = f"{CYAN}○ READY {RESET} "
                     prefix = "  "
-                    email_styled = f"{acc.email}"
+                    email_styled = f"{display_email}"
 
                 num_prefix = f"{GRAY}[{idx}]{RESET} "
                 row = f"{prefix}{num_prefix}{status_badge} {short_id:<8} {email_styled:<32} {session_pct:>4} {session_bar}   {weekly_pct:>4}     {GRAY}{reset_str}{RESET}"
@@ -142,7 +158,7 @@ def run_live_monitor(config: RotatorConfig):
                 out.append("  " + " " * 80)
 
             # Footer Hotkeys
-            out.append(f"\n  {BOLD}Kontrol Cepat:{RESET} [{GREEN}r{RESET}] Rotasi Terbaik  │  [{CYAN}1-{total_acc}{RESET}] Pilih Akun  │  [{RED}q{RESET}] Tutup Monitor")
+            out.append(f"\n  {BOLD}Kontrol Cepat:{RESET} [{GREEN}r{RESET}] Rotasi  │  [{YELLOW}m{RESET}] Toggle Mask  │  [{CYAN}1-{total_acc}{RESET}] Pilih Akun  │  [{RED}q{RESET}] Tutup")
             out.append("\033[J")  # Clear remaining lines below
 
             sys.stdout.write("\n".join(out))
@@ -154,22 +170,28 @@ def run_live_monitor(config: RotatorConfig):
                 ch = sys.stdin.read(1)
                 if ch.lower() in ["q", "\x03", "\x1b"]:  # 'q', Ctrl+C, Esc
                     break
+                elif ch.lower() == "m":
+                    is_masked = not is_masked
+                    status_toast = "Privacy Mask AKTIF (Akun dummy)" if is_masked else "Privacy Mask NONAKTIF (Akun asli)"
+                    status_toast_time = time.time()
                 elif ch.lower() == "r":
                     status_toast = "Mencari akun terbaik & merotasi..."
                     status_toast_time = time.time()
                     candidate, reason, _ = mgr.find_best_candidate(strategy="smart_quota")
                     if candidate:
                         mgr.switch_account(candidate)
-                        status_toast = f"Berhasil beralih ke: {candidate.email}"
+                        target_name = DUMMY_POOL[0] if is_masked else candidate.email
+                        status_toast = f"Berhasil beralih ke: {target_name}"
                     else:
                         status_toast = f"Rotasi ditahan: {reason}"
                     status_toast_time = time.time()
                 elif ch.isdigit() and 1 <= int(ch) <= len(accounts):
                     target = accounts[int(ch) - 1]
-                    status_toast = f"Beralih ke: {target.email}..."
+                    target_name = DUMMY_POOL[int(ch) - 1] if is_masked else target.email
+                    status_toast = f"Beralih ke: {target_name}..."
                     status_toast_time = time.time()
                     mgr.switch_account(target)
-                    status_toast = f"Aktif sekarang: {target.email}"
+                    status_toast = f"Aktif sekarang: {target_name}"
                     status_toast_time = time.time()
 
     finally:

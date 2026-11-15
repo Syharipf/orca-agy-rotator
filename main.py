@@ -120,7 +120,7 @@ def cmd_status(args, config: RotatorConfig):
 
 def cmd_accounts(args, config: RotatorConfig):
     if getattr(args, "live", False):
-        run_live_monitor(config)
+        run_live_monitor(config, mask=getattr(args, "mask", False))
         return
 
     mgr = AccountManager()
@@ -130,17 +130,28 @@ def cmd_accounts(args, config: RotatorConfig):
         print("No managed Antigravity accounts found.")
         return
 
+    is_masked = getattr(args, "mask", False)
+    dummy_pool = [
+        "dev-lead@example.com",
+        "worker-alpha@example.com",
+        "runner-beta@example.com",
+        "agent-gamma@example.com",
+        "backup-ops@example.com",
+        "standby-pool@example.com",
+    ]
+
     # Terminal context for routing info
     term_mgr = TerminalManager()
     active_term = term_mgr.find_active_terminal()
-    session_title = active_term.title if active_term else "Active Terminal"
+    session_title = "Terminal 1 · main.py" if is_masked else (active_term.title if active_term else "Active Terminal")
 
+    mask_notice = " \033[32m[PRIVACY MASK: ON]\033[0m" if is_masked else ""
     print("=" * 95)
-    print(f" {'STATUS':<14} | {'EMAIL':<34} | {'SESSION':<10} | {'WEEKLY':<10} | {'RESET TERDEKAT'}")
+    print(f" {'STATUS':<14} | {'EMAIL' + mask_notice:<43} | {'SESSION':<10} | {'WEEKLY':<10} | {'RESET TERDEKAT'}")
     print("=" * 95)
-    for acc in accounts:
+    for idx, acc in enumerate(accounts):
         is_active = (acc.id == active_id)
-        email_str = acc.email
+        email_str = dummy_pool[idx % len(dummy_pool)] if is_masked else acc.email
 
         # Quota tag with 9Router-style in-use indicator
         if is_active:
@@ -167,7 +178,7 @@ def cmd_accounts(args, config: RotatorConfig):
             print(f"  \033[90m╰─\033[0m \033[32mRouting aktif ke:\033[0m \033[1m{session_title}\033[0m (Traffic AI diarahkan ke akun ini)")
 
     print("=" * 95)
-    print("💡 \033[1mMode Live:\033[0m Jalankan '\033[36m./main.py live\033[0m' atau '\033[36m./main.py accounts -l\033[0m' untuk tampilan real-time terus-menerus.")
+    print("💡 \033[1mMode Live:\033[0m Jalankan '\033[36m./main.py live\033[0m' (tekan 'm' untuk toggle mask). Flag '\033[36m--mask\033[0m' untuk menyembunyikan akun asli.")
 
 
 def cmd_switch(args, config: RotatorConfig):
@@ -334,10 +345,13 @@ def main():
     # accounts command
     p_accounts = subparsers.add_parser("accounts", parents=[base_parser], help="Tampilkan daftar seluruh akun Antigravity dan kuotanya")
     p_accounts.add_argument("--live", "-l", action="store_true", help="Buka monitor real-time interaktif (tampilan 9Router)")
+    p_accounts.add_argument("--mask", "-m", action="store_true", help="Sembunyikan akun asli dengan email dummy (mode presentasi/screenshot)")
 
     # live / watch command (9Router-style live interactive TUI)
-    subparsers.add_parser("live", parents=[base_parser], help="Buka live interactive monitor real-time seperti 9Router")
-    subparsers.add_parser("watch", parents=[base_parser], help="Alias untuk perintah live")
+    p_live = subparsers.add_parser("live", parents=[base_parser], help="Buka live interactive monitor real-time seperti 9Router")
+    p_live.add_argument("--mask", "-m", action="store_true", help="Sembunyikan akun asli dengan email dummy (mode presentasi/screenshot)")
+    p_watch = subparsers.add_parser("watch", parents=[base_parser], help="Alias untuk perintah live")
+    p_watch.add_argument("--mask", "-m", action="store_true", help="Sembunyikan akun asli dengan email dummy (mode presentasi/screenshot)")
 
     # switch command
     p_switch = subparsers.add_parser("switch", parents=[base_parser], help="Ganti akun Antigravity sekarang")
@@ -371,7 +385,7 @@ def main():
     elif cmd == "accounts":
         cmd_accounts(args, config)
     elif cmd in ("live", "watch"):
-        run_live_monitor(config)
+        run_live_monitor(config, mask=getattr(args, "mask", False))
     elif cmd == "switch":
         cmd_switch(args, config)
     elif cmd == "resume":
