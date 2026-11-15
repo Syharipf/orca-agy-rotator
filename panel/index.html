@@ -1000,7 +1000,10 @@
         <h2>Account Fleet Ranking</h2>
         <div class="section-desc">Click row or Select button to switch active route</div>
       </div>
-      <span style="font-size:9px; color:#7dd3fc; font-family:var(--font-mono); white-space:nowrap;">⇄ Scrollable table</span>
+      <div style="text-align:right;">
+        <span id="fleetTableCount" style="font-size:9.5px; font-family:var(--font-mono); color:var(--muted-fg);">6 accounts</span>
+        <div style="font-size:8.5px; color:#7dd3fc; font-family:var(--font-mono); white-space:nowrap;">⇄ Scrollable</div>
+      </div>
     </div>
 
     <div class="table-wrap">
@@ -1453,10 +1456,11 @@
     document.getElementById('legendInputVal').textContent = `${formatTokens(pStats.input)} (${inputPct.toFixed(1)}%)`;
     document.getElementById('legendOutputVal').textContent = `${formatTokens(pStats.output)} (${outputPct.toFixed(1)}%)`;
 
-    // 6. Account Fleet Ranking Table (Zero Overflow)
+    // 6. Account Fleet Ranking Table
     const tbody = document.getElementById('fleetTableBody');
-    tbody.innerHTML = '';
-    document.getElementById('fleetTableCount').textContent = `${totalAcc} accounts`;
+    if (tbody) tbody.innerHTML = '';
+    const fleetCountEl = document.getElementById('fleetTableCount');
+    if (fleetCountEl) fleetCountEl.textContent = `${totalAcc} accounts`;
 
     accounts.forEach((acc, idx) => {
       const tr = document.createElement('tr');
