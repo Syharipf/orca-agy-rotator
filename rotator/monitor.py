@@ -85,7 +85,16 @@ class LogMonitor:
         """Finds all target log files and registers FileWatchers."""
         candidate_paths = set()
 
-        for pattern in self.log_file_patterns:
+        # Combine user-configured patterns with cross-platform default locations
+        all_patterns = list(self.log_file_patterns) + [
+            "~/Library/Logs/orca/main.trace.ndjson",
+            "~/Library/Application Support/orca/logs/main.trace.ndjson",
+            "~/Library/Logs/orca/daemon.log",
+            "~/AppData/Roaming/orca/logs/main.trace.ndjson",
+            "~/AppData/Roaming/orca/logs/daemon.log",
+        ]
+
+        for pattern in all_patterns:
             expanded = os.path.expanduser(pattern)
             for path_str in glob.glob(expanded):
                 p = Path(path_str)

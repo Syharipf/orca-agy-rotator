@@ -87,13 +87,16 @@ The repository provides two deployment targets that can run independently or in 
 
 ---
 
-## Installation
+## Platform Compatibility & Installation
+
+### Supported Environments
+- **Native Orca ADE Plugin:** **Cross-Platform** (Linux, macOS, Windows / WSL). Runs directly inside Orca ADE's runtime environment via Node.js `trusted-worker` and standard Orca host APIs (`notifications.show`, `terminal.sendText`).
+- **Python Daemon & CLI:** Linux (systemd user daemon), macOS (launchd / foreground CLI), and Windows (WSL / standard Python 3.10+).
 
 ### Prerequisites
-- Linux OS (kernel 5.x+, x86_64 or aarch64)
-- Python 3.10 or newer
+- Python 3.10 or newer (Standard library only; zero external pip dependencies)
 - Orca ADE (`>= 1.4.248`) with authenticated Antigravity accounts (`orca account add`)
-- `libnotify-bin` (optional, for desktop notification popups)
+- Desktop notifications: `notify-send` (Linux) or native AppleScript (`osascript`, macOS)
 
 ### Method A: Native Orca ADE Plugin
 

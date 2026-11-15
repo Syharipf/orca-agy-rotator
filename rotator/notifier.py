@@ -17,6 +17,7 @@ class Notifier:
         self.enabled = enabled
         self.app_name = app_name
         self._notify_send_bin = shutil.which("notify-send")
+        self._osascript_bin = shutil.which("osascript")
 
     def _send(self, title: str, message: str, urgency: str = "normal", icon: str = "dialog-information"):
         # Log to stdout/log file always
@@ -24,29 +25,43 @@ class Notifier:
         logger.info(f"[{urgency.upper()}] {title}: {message}")
         print(f"[{timestamp}] [{title}] {message}")
 
-        if not self.enabled or not self._notify_send_bin:
+        if not self.enabled:
             return
 
-        # Prepare env for notify-send if run under systemd
-        env = dict(os.environ)
-        if "DISPLAY" not in env:
-            env["DISPLAY"] = ":0"
-        if "DBUS_SESSION_BUS_ADDRESS" not in env:
-            env["DBUS_SESSION_BUS_ADDRESS"] = f"unix:path=/run/user/{os.getuid()}/bus"
+        import sys
+        # macOS Notification via AppleScript
+        if sys.platform == "darwin" and self._osascript_bin:
+            clean_title = title.replace('"', '\\"')
+            clean_msg = message.replace('"', '\\"').replace('\n', ' ')
+            script = f'display notification "{clean_msg}" with title "{clean_title}"'
+            try:
+                subprocess.run([self._osascript_bin, "-e", script], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                return
+            except Exception as e:
+                logger.debug(f"Failed to execute osascript: {e}")
 
-        cmd = [
-            self._notify_send_bin,
-            "-a", self.app_name,
-            "-u", urgency,
-            "-i", icon,
-            title,
-            message
-        ]
+        # Linux Notification via notify-send
+        if self._notify_send_bin:
+            env = dict(os.environ)
+            if "DISPLAY" not in env:
+                env["DISPLAY"] = ":0"
+            if "DBUS_SESSION_BUS_ADDRESS" not in env:
+                uid = os.getuid() if hasattr(os, "getuid") else 1000
+                env["DBUS_SESSION_BUS_ADDRESS"] = f"unix:path=/run/user/{uid}/bus"
 
-        try:
-            subprocess.run(cmd, env=env, check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        except Exception as e:
-            logger.debug(f"Failed to execute notify-send: {e}")
+            cmd = [
+                self._notify_send_bin,
+                "-a", self.app_name,
+                "-u", urgency,
+                "-i", icon,
+                title,
+                message
+            ]
+
+            try:
+                subprocess.run(cmd, env=env, check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            except Exception as e:
+                logger.debug(f"Failed to execute notify-send: {e}")
 
     def notify_switch(self, old_email: str, new_email: str, reason: str, dry_run: bool = False):
         prefix = "[DRY-RUN] " if dry_run else ""

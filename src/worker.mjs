@@ -21,7 +21,9 @@ function resolveOrcaBinary() {
   const candidates = [
     process.env.ORCA_CLI_COMMAND,
     join(home, '.config', 'orca', 'linux-orca-cli-shim', 'orca'),
+    '/opt/homebrew/bin/orca',
     '/usr/local/bin/orca',
+    join(home, 'AppData', 'Local', 'Programs', 'Orca', 'resources', 'bin', 'orca.cmd'),
     'orca',
   ].filter(Boolean);
 
