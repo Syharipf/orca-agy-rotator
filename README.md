@@ -193,6 +193,52 @@ Anda dapat menyesuaikan parameter di `config.json` atau file konfigurasi kustom:
 
 ---
 
+## 🧩 Integrasi Penuh Sebagai Plugin Resmi Orca ADE
+
+Project ini telah dilengkapi dengan spesifikasi **Official Orca Plugin Manifest v2** (`orca-plugin.json`):
+
+1. **Status Bar Item di Orca:**
+   Menampilkan email akun aktif dan status kuota real-time di status bar Orca bagian bawah:
+   `[refresh] Agy: indahmysri1 (0%)`
+2. **Sidebar Panel UI di Orca (`panel/index.html`):**
+   Membuka panel visual di sidebar kanan Orca untuk melihat seluruh 6 akun Antigravity, progress bar sisa kuota Session & Weekly, countdown waktu reset, dan tombol *Rotate Best* serta *Pilih Akun*.
+3. **Background Worker (`src/worker.mjs`):**
+   Worker Node.js `trusted-worker` yang terus aktif di latar belakang Orca, mendeteksi event `agent.status.changed`, merotasi akun saat rate limit, dan memicu auto-resume ke terminal.
+
+### Menjalankan Plugin di Orca Lokal (Development Mode)
+```bash
+# Validasi struktur plugin:
+orca plugin validate .
+
+# Muat plugin langsung ke Orca Anda:
+orca plugin dev load .
+
+# Buka panel visual switcher di sidebar kanan Orca:
+orca plugin open local.antigravity-rotator
+```
+
+### 🚀 Cara Rilis ke Marketplace Orca Komunitas (`orca-community-plugins`)
+1. **Push repository ini ke GitHub Anda:**
+   ```bash
+   git remote add origin https://github.com/<username>/orca-antigravity-rotator.git
+   git branch -M main
+   git push -u origin main
+   ```
+2. **Generate Release Entry:**
+   ```bash
+   orca plugin release-entry .
+   ```
+3. **Submit ke Orca Marketplace:**
+   - Buka repository [stablyai/orca-community-plugins](https://github.com/stablyai/orca-community-plugins).
+   - Fork repo tersebut dan tempelkan blok JSON hasil `orca plugin release-entry .` ke dalam file `orca-catalog.json`.
+   - Buka Pull Request (PR).
+   - Setelah di-merge, pengguna di seluruh dunia bisa menginstalnya dengan satu baris:
+     ```bash
+     orca plugin install antigravity-rotator --approve
+     ```
+
+---
+
 ## 🧪 Pengujian & Validasi
 
 Suite pengujian unit test telah disertakan:
