@@ -1,227 +1,189 @@
-<p align="center">
-  <img src="images/cover.png" alt="Orca ADE Antigravity Auto-Switcher Banner" width="100%">
-</p>
+# Orca ADE Antigravity Auto-Switcher
 
-<p align="center">
-  <strong>Solusi otomatisasi rotasi akun Antigravity (<code>agy</code>) di Orca ADE. Gak perlu lagi ganti akun manual saat kuota habis atau kena limit 429.</strong>
-</p>
-
-<p align="center">
-  <img src="https://img.shields.io/badge/Orca%20ADE-Plugin%20v2-10b981?style=for-the-badge&logo=visualstudiocode&logoColor=white" alt="Orca Plugin v2">
-  <img src="https://img.shields.io/badge/Linux-systemd%20daemon-f59e0b?style=for-the-badge&logo=linux&logoColor=white" alt="Linux Systemd">
-  <img src="https://img.shields.io/badge/Python-3.10%2B-3b82f6?style=for-the-badge&logo=python&logoColor=white" alt="Python 3.10+">
-  <img src="https://img.shields.io/badge/Auto--Switch-Zero--Downtime-8b5cf6?style=for-the-badge" alt="Auto Switch">
-  <img src="https://img.shields.io/badge/License-MIT-gray?style=for-the-badge" alt="MIT License">
-  <img src="https://img.shields.io/badge/Tests-7%2F7%20Passing-success?style=for-the-badge" alt="Tests Passing">
-</p>
+Background failover daemon and native Orca ADE v2 plugin for automated account rotation and session continuation on the Antigravity (`antigravity`) agent runtime.
 
 ---
 
-## 🎯 Masalah Utama: Kenapa Tool Ini Dibuat?
+## Technical Background
 
-Di **Orca ADE**, agent **Antigravity (`agy`)** sangat powerful untuk coding otonom. Banyak developer yang menghubungkan beberapa akun sekaligus untuk cadangan kuota.
+In Orca ADE, multi-account authentication for the Antigravity agent is managed through the `orca account` subsystem:
+- `orca account list --agent antigravity --json`: Reports registered accounts along with session and weekly quota consumption metrics (`usedPercent`).
+- `orca account select --agent antigravity --account <id|email>`: Selects the active account used for subsequent agent invocations on the host.
 
-Tapi ada satu masalah besar: **Bawaan Orca saat ini BELUM BISA auto-switch akun Antigravity secara otomatis.**
+Orca ADE does not provide native automatic account failover. When an active Antigravity account reaches its API quota or returns a rate limit error (`HTTP 429 Too Many Requests` or `RESOURCE_EXHAUSTED`):
+1. Execution halts in the active terminal session.
+2. The user must manually query `orca account list` to locate an account with available quota.
+3. The user must execute `orca account select` to re-bind the host credentials.
+4. The user must manually submit a prompt to the active agent terminal to resume execution.
 
-Setiap kali akun aktif terkena rate limit (`HTTP 429 Too Many Requests` atau `RESOURCE_EXHAUSTED`):
-1. 🛑 **Agen langsung berhenti bekerja di tengah jalan.**
-2. 🔍 **Harus cek manual satu-satu:** Buka terminal, ketik perintah list akun, cari tahu akun mana yang kuotanya masih ada atau sudah reset.
-3. 🔄 **Harus ganti akun secara manual:** Jalankan perintah switch atau klik ganti akun di UI.
-4. ⌨️ **Harus ngetik manual lagi:** Masuk ke terminal aktif lalu ngetik *"lanjutkan pengerjaan"* agar agent mau jalan lagi.
-
-Akibatnya? Kita harus terus-menerus **"nge-babysit"** agen AI. Niatnya pengen autonomous agent bekerja mandiri ditinggal ngopi, kenyataannya malah bolak-balik ngecek terminal gara-gara limit kuota.
-
-**Tool ini hadir untuk menambal kekurangan tersebut!** Mengubah proses ganti manual yang merepotkan menjadi **100% otomatis di latar belakang**.
+This project implements an automated, event-driven supervisor that handles rate-limit detection, account rotation, credential synchronization, and terminal session re-triggering without manual intervention.
 
 ---
 
-## ⚡ Solusi & Cara Kerjanya
-
-```mermaid
-flowchart TD
-    subgraph MasalahLama["❌ Alur Lama (Manual & Bikin Ribet)"]
-        direction TB
-        M1["Agen Kena Limit 429"] --> M2["Agen Berhenti Macet"]
-        M2 --> M3["Developer Harus Cek Kuota Manual"]
-        M3 --> M4["Developer Ganti Akun Manual"]
-        M4 --> M5["Developer Ketik 'Lanjutkan' Manual"]
-    end
-
-    subgraph SolusiBaru["✅ Alur Baru (100% Otomatis dengan Tool Ini)"]
-        direction TB
-        A1["Agen Kena Limit 429 / Kuota 100%"] --> A2["Auto-Detector Tangkap Event Realtime"]
-        A2 --> A3["Smart Quota Pilih Akun Terbaik (Sisa 0% Terbanyak)"]
-        A3 --> A4["Auto-Switch Keyring Akun di Background"]
-        A4 --> A5["Settle Delay 2 Detik (Sync Keyring OS)"]
-        A5 --> A6["Auto-Resume Kirim 'lanjutkan pengerjaan tadi' ke Terminal"]
-        A6 --> A7["🚀 Agen Langsung Lanjut Coding Tanpa Henti!"]
-    end
-```
-
----
-
-## 🚀 Fitur Unggulan
-
-### 1. 🔄 Otomatis Ganti Akun (Auto-Switch) Saat Limit
-- Memantau log Orca secara streaming (`main.trace.ndjson`, `daemon.log`, transcript brain) untuk menangkap error `RESOURCE_EXHAUSTED` dan `429`.
-- Dilengkapi **Proactive Quota Polling**: Jika kuota session akun aktif sudah menyentuh 100%, sistem langsung melakukan rotasi otomatis sebelum agen crash.
-- Memprioritaskan akun dengan kuota paling kosong (Session & Weekly 0%).
-
-### 2. 🤖 Auto-Resume ke Terminal Aktif
-- Tidak cuma ganti akun, tool ini mencari terminal Orca yang sedang aktif dan writable.
-- Memberi jeda aman *settle delay* (2 detik) agar kredensial OS tersinkronisasi.
-- Mengirim trigger otomatis:
-  ```bash
-  orca terminal send --terminal <terminal_id> --text "lanjutkan pengerjaan tadi" --enter
-  ```
-  Agen langsung melanjutkan tugasnya tanpa kehilangan konteks percakapan!
-
-### 3. 🛡️ Anti-Ban & Safety Engine
-- **Cooldown 30 Detik:** Menghindari looping ganti akun terlalu cepat.
-- **Circuit Breaker:** Jika terjadi lebih dari 5 kali pergantian dalam 3 menit, rotasi ditahan otomatis dan desktop alarm berbunyi agar akun aman dari flag abuse Google/Orca.
-- **Single-Instance Lock:** Mencegah konflik antar proses via `/tmp/orca-agy-rotator.lock`.
-
-### 4. 🧩 Dua Mode Pemakaian Fleksibel
-- **Linux Systemd User Service:** Berjalan senyap di background sistem operasi Linux setiap kali login.
-- **Native Orca Plugin v2 (`local.antigravity-rotator`):** Tampil langsung di status bar dan panel sidebar kanan Orca ADE dengan visual modern, indikator aktif `● IN USE`, dan tombol *Rotate Best*.
-
-### 5. 🔒 Mode Privacy Masking
-- Mau share screen, streaming, atau bikin dokumentasi? Cukup nyalakan Privacy Mask (`./main.py live -m` atau klik toggle di UI).
-- Seluruh email asli otomatis disamarkan menjadi dummy (`dev-lead@example.com`, `worker-alpha@example.com`, dll.).
-
----
-
-## 🖥️ Live Terminal Monitor (TUI)
-
-Jalankan monitor interaktif di terminal Anda:
-
-```bash
-./main.py live
-```
-
-Tampilan di terminal:
-```text
-===============================================================================================
- STATUS         | EMAIL [PRIVACY MASK: ON]           | SESSION    | WEEKLY     | RESET TERDEKAT
-===============================================================================================
- ▶ ● IN USE      | dev-lead@example.com               | 0%         | 0%         | 23:09:59 (109m lagi)
-  ╰─ Routing aktif ke: Terminal 1 · main.py (Traffic AI diarahkan ke akun ini)
-   ○ READY       | worker-alpha@example.com           | 27%        | 9%         | 23:25:32 (124m lagi)
-   ○ READY       | runner-beta@example.com            | 1%         | 1%         | 23:43:11 (142m lagi)
-   ○ READY       | agent-gamma@example.com            | 1%         | 1%         | 23:50:54 (150m lagi)
-   ○ READY       | backup-ops@example.com             | 1%         | 1%         | 23:52:13 (151m lagi)
-   ○ READY       | standby-pool@example.com           | 0%         | 0%         | 01:47:25 (266m lagi)
-===============================================================================================
-[Hotkeys] (r) Rotate Best  |  (m) Toggle Mask  |  (1-6) Direct Switch  |  (q) Exit
-```
-
----
-
-## 📂 Struktur Project
+## System Architecture
 
 ```text
-agy auto switch/
-├── config.json                 # Konfigurasi interval & safety
-├── main.py                     # Entrypoint CLI & Live Monitor
-├── orca-plugin.json            # Manifest resmi Plugin Orca ADE v2
-├── rotator/                    # Engine inti Python
-│   ├── account_manager.py      # Ranking kuota & integrasi Orca CLI
-│   ├── config.py               # Config dataclass
-│   ├── live_view.py            # TUI real-time monitor
-│   ├── monitor.py              # Log streaming regex watcher
-│   ├── notifier.py             # Linux desktop notification (notify-send)
-│   ├── safety.py               # Cooldown, circuit breaker, lockfile
-│   ├── service.py              # Orkestrator background daemon
-│   └── terminal_manager.py     # Deteksi PTY & auto-resume injector
-├── src/
-│   └── worker.mjs              # Background trusted-worker untuk Orca Plugin
-├── panel/
-│   └── index.html              # UI Panel sidebar kanan Orca
-├── images/
-│   ├── icon.png                # Icon plugin resmi (128x128)
-│   ├── icon.svg                # Master icon vector
-│   └── cover.png               # Banner cover repositori
-├── orca-agy-rotator.service    # Template systemd service Linux
-├── install_service.sh          # Script otomatis instalasi service
-└── test_rotator.py             # 7 unit test pengujian edge case
++--------------------------------------------------------------------------------+
+|                                Orca ADE Host                                   |
+|                                                                                |
+|  +--------------------+    NDJSON Logs    +---------------------------------+  |
+|  | Active Antigravity | ----------------> | Streaming Log Watcher           |  |
+|  | Terminal Session   |                   | (Line-buffered regex scanner)   |  |
+|  +--------------------+                   +---------------------------------+  |
+|            ^                                               |                   |
+|            | Resume Command                                v                   |
+|            | ("lanjutkan pengerjaan")     +---------------------------------+  |
+|            +----------------------------- | Failover & Safety Controller    |  |
+|            |                              | - Cooldown gate (30s)           |  |
+|            | Settle Delay (2.0s)          | - Sliding-window circuit breaker|  |
+|            |                              | - PID file lock enforcement     |  |
+|  +--------------------+                   +---------------------------------+  |
+|  | Host Keyring       | <----------------                  |                   |
+|  | Credential Store   |   orca account select              v                   |
+|  +--------------------+                   +---------------------------------+  |
+|            ^                              | Account Manager & Quota Ranker  |  |
+|            |                              | - Reads session/weekly usage    |  |
+|            +----------------------------- | - Selects lowest % used (0%)    |  |
+|                   orca account list --json+---------------------------------+  |
++--------------------------------------------------------------------------------+
 ```
 
+### Operational Workflow
+1. **Detection:**
+   - **Reactive:** Non-blocking scanner monitors Orca trace logs (`~/.config/orca/logs/main.trace.ndjson`, `daemon.log`, ACP brain transcripts) for `RESOURCE_EXHAUSTED`, `HTTP 429`, and related quota rejection patterns.
+   - **Proactive:** Background polling queries `orca account list --agent antigravity --json`. If the currently selected account reaches 100% session quota, failover triggers preemptively before turn failure.
+2. **Account Selection:**
+   - Accounts are ranked by available quota using Orca's native integer scale (`usedPercent: 0-100`).
+   - Prioritizes accounts with `usedPercent == 0` for both session and weekly windows.
+   - If all accounts are exhausted, computes the shortest reset epoch (`resetsAt`) and holds execution safely until the nearest reset window opens.
+3. **Failover Execution:**
+   - Invokes `orca account select --agent antigravity --account <target_id>` via IPC.
+   - Applies a configurable 2.0-second settle delay to allow OS keyring credential flush.
+4. **Session Continuation:**
+   - Resolves the active, writable agent terminal handle via `orca terminal list --json`.
+   - Dispatches a continuation trigger (`orca terminal send --terminal <id> --text "lanjutkan pengerjaan tadi" --enter`) to resume autonomous execution.
+5. **Safety Guardrails:**
+   - **Cooldown:** Enforces a minimum interval (default: 30 seconds) between switch operations.
+   - **Circuit Breaker:** Halts rotation and issues a system notification if switch frequency exceeds 5 transitions within 180 seconds.
+   - **Process Lock:** Single-instance concurrency control via `/tmp/orca-agy-rotator.lock`.
+
 ---
 
-## 🚀 Panduan Instalasi
+## Components
 
-### Syarat Sistem:
-- OS Linux (x86_64 atau aarch64)
-- Python 3.10+ (Tanpa modul pip eksternal, hanya modul standar Python)
-- Orca ADE terpasang dan sudah login akun Antigravity (`orca account login --agent antigravity`)
+The repository provides two deployment targets that can run independently or in tandem:
+
+### 1. Linux Systemd User Daemon (`rotator/`)
+- Pure Python 3.10+ service utilizing standard library modules (zero external dependencies).
+- Runs under `systemd --user` as a persistent background supervisor.
+- Provides interactive terminal monitoring (`main.py live`) and CLI operational controls.
+
+### 2. Native Orca ADE Plugin v2 (`orca-plugin.json`)
+- Conforms to Orca ADE Plugin Manifest v2 schema (`execution: "trusted-worker"`).
+- Background worker (`src/worker.mjs`) monitoring quota and workspace status events.
+- Sidebar UI panel (`panel/index.html`) using native Orca design tokens (`var(--orca-*)`).
+- Status bar item displaying real-time active account quota.
+- Built-in Privacy Mask toggle to sanitize account identifiers for screencasts.
 
 ---
 
-### Cara 1: Pasang Sebagai Plugin Resmi Orca ADE (Rekomendasi)
+## Installation
 
-1. **Clone repository:**
+### Prerequisites
+- Linux OS (kernel 5.x+, x86_64 or aarch64)
+- Python 3.10 or newer
+- Orca ADE (`>= 1.4.248`) with authenticated Antigravity accounts (`orca account add`)
+- `libnotify-bin` (optional, for desktop notification popups)
+
+### Method A: Native Orca ADE Plugin
+
+1. Clone repository:
    ```bash
    git clone https://github.com/syharipf/orca-antigravity-rotator.git
    cd orca-antigravity-rotator
    ```
 
-2. **Validasi & Muat ke Orca (Development Mode):**
+2. Validate manifest:
    ```bash
-   # Validasi manifest v2
    orca plugin validate .
+   ```
 
-   # Muat plugin langsung ke runtime Orca
+3. Load plugin in development mode:
+   ```bash
    orca plugin dev load .
    ```
 
-3. **Buka Panel Switcher:**
-   Klik icon **Antigravity Switcher** di sidebar kanan Orca atau jalankan:
+4. Open the panel in Orca:
    ```bash
    orca plugin open local.antigravity-rotator
    ```
 
----
+### Method B: Linux Systemd User Service
 
-### Cara 2: Pasang Sebagai Linux Systemd Service (Otomatis Aktif Saat Boot)
+1. Register and enable the systemd service:
+   ```bash
+   ./main.py install-service
+   ```
 
-Service ini akan berjalan di latar belakang setiap kali Anda login ke OS Linux:
+2. Verify operational status:
+   ```bash
+   systemctl --user status orca-agy-rotator.service
+   ```
 
-```bash
-# 1. Pasang & aktifkan service otomatis
-./main.py install-service
+3. View real-time service logs:
+   ```bash
+   journalctl --user -u orca-agy-rotator.service -f
+   ```
 
-# 2. Cek status service
-systemctl --user status orca-agy-rotator.service
-
-# 3. Pantau log real-time
-journalctl --user -u orca-agy-rotator.service -f
-```
-
-Untuk menghentikan atau mencopot service:
+To uninstall:
 ```bash
 ./main.py uninstall-service
 ```
 
 ---
 
-## 🛠️ Panduan Perintah CLI
+## CLI Reference
 
-| Perintah | Deskripsi |
-|---|---|
-| `./main.py status` | Menampilkan status daemon, akun aktif, sisa kuota, dan terminal Orca |
-| `./main.py accounts` | Menampilkan tabel seluruh akun beserta waktu countdown reset |
-| `./main.py accounts --mask` | Menampilkan tabel akun dengan nama disamarkan (Privacy Mode) |
-| `./main.py live` | Membuka TUI live monitor dengan hotkey pergantian cepat |
-| `./main.py switch` | Memaksa rotasi ke akun dengan kuota paling kosong saat ini |
-| `./main.py switch <email>` | Beralih ke akun email tertentu secara manual |
-| `./main.py switch --dry-run` | Simulasi pemilihan akun tanpa benar-benar mengganti keyring |
-| `./main.py resume --dry-run` | Menguji deteksi terminal aktif dan teks auto-resume |
-| `./main.py test-notify` | Menguji notifikasi desktop Linux |
-| `./main.py run` | Menjalankan daemon di foreground untuk debugging |
+The unified CLI entrypoint `main.py` provides system management and interactive monitoring:
+
+```text
+Usage: ./main.py [COMMAND] [OPTIONS]
+
+Commands:
+  status               Display daemon status, active quota, and active terminal handles
+  accounts             List registered accounts ranked by quota usage
+  accounts --mask      List accounts with email masking enabled
+  live                 Launch interactive real-time terminal UI (TUI)
+  switch               Trigger immediate rotation to lowest-usage candidate
+  switch <account>     Switch explicitly to a designated account ID or email
+  switch --dry-run     Simulate candidate evaluation without switching keyring
+  resume --dry-run     Test active terminal detection and resume formatting
+  test-notify          Send a test desktop notification
+  run                  Run supervisor in foreground (debug mode)
+  install-service      Register and start systemd user service
+  uninstall-service    Stop and unregister systemd user service
+```
+
+### Live TUI Monitor Sample
+```text
+===============================================================================================
+ STATUS         | EMAIL [PRIVACY MASK: ON]           | SESSION    | WEEKLY     | RESET TIME
+===============================================================================================
+ ▶ ● IN USE     | dev-lead@example.com               | 0%         | 0%         | 23:09:59 (109m)
+   ○ READY      | worker-alpha@example.com           | 27%        | 9%         | 23:25:32 (124m)
+   ○ READY      | runner-beta@example.com            | 1%         | 1%         | 23:43:11 (142m)
+   ○ READY      | agent-gamma@example.com            | 1%         | 1%         | 23:50:54 (150m)
+   ○ READY      | backup-ops@example.com             | 1%         | 1%         | 23:52:13 (151m)
+   ○ READY      | standby-pool@example.com           | 0%         | 0%         | 01:47:25 (266m)
+===============================================================================================
+[Hotkeys] (r) Rotate Best  |  (m) Toggle Mask  |  (1-6) Direct Switch  |  (q) Exit
+```
 
 ---
 
-## ⚙️ Kustomisasi (`config.json`)
+## Configuration
+
+Service parameters are defined in `config.json`:
 
 ```json
 {
@@ -240,40 +202,58 @@ Untuk menghentikan atau mencopot service:
 }
 ```
 
+### Field Definitions
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `log_check_interval` | float | `1.0` | Polling frequency for streaming log files (seconds) |
+| `quota_check_interval` | float | `20.0` | Interval for proactive CLI quota evaluation (seconds) |
+| `cooldown_seconds` | float | `30.0` | Minimum elapsed time required between consecutive rotations |
+| `circuit_breaker_max_switches` | int | `5` | Maximum permitted transitions within window before trip |
+| `circuit_breaker_window_seconds`| float | `180.0` | Sliding window duration for circuit breaker evaluation |
+| `rotation_strategy` | string | `"smart_quota"` | `"smart_quota"` (lowest usage first) or `"round_robin"` |
+| `auto_resume` | bool | `true` | Enables automatic prompt transmission to active terminal |
+| `resume_delay_seconds` | float | `2.0` | Post-switch delay prior to terminal prompt injection |
+| `resume_command` | string | `"lanjutkan pengerjaan tadi"` | Payload string injected into the terminal session |
+| `target_terminal` | string/null | `null` | Explicit terminal handle or `null` for automated detection |
+| `notifications_enabled` | bool | `true` | Dispatches desktop alerts via `notify-send` |
+
 ---
 
-## 🧪 Pengujian Unit Test
+## Verification & Test Suite
 
-Tool ini telah melalui serangkaian unit test pengujian skenario edge-case:
+The test suite exercises account selection, quota ranking, cooldown constraints, circuit breaker limits, streaming pattern detection, and terminal prioritization:
 
 ```bash
 python3 test_rotator.py
 ```
 
+Test output:
 ```text
-Ran 7 tests in 0.004s
+Ran 7 tests in 0.003s
 
 OK
 ```
 
-**Skenario yang diuji:**
-1. Pemilihan kandidat akun dengan kuota paling kosong (*Smart Quota*).
-2. Penanganan kondisi seluruh akun habis (*All Exhausted*) & hitung mundur waktu reset terdekat.
-3. Strategi rotasi bergiliran (*Round-Robin*).
-4. Penegakan waktu jeda cooldown (30 detik).
-5. Pengaktifan circuit breaker jika terdeteksi pergantian berulang dalam waktu singkat.
-6. Deteksi ekspresi reguler (regex) rate limit pada log streaming.
-7. Penentuan prioritas terminal yang sedang aktif dan writable.
+### Test Coverage
+- `test_select_best_account_smart_quota`: Validates 0% usage selection over partially consumed accounts.
+- `test_select_best_all_exhausted`: Verifies correct fallback calculation and earliest reset timestamp resolution.
+- `test_select_best_account_round_robin`: Validates sequential cycling when round-robin strategy is selected.
+- `test_cooldown_enforcement`: Asserts that rotation requests within the cooldown window are rejected.
+- `test_circuit_breaker_trip`: Asserts that exceeding switch velocity trips the breaker and locks rotation.
+- `test_detect_limit_patterns`: Verifies regex pattern detection across simulated NDJSON log streams.
+- `test_terminal_priority`: Asserts that writable Antigravity sessions take priority over generic terminals.
 
 ---
 
-## 🔒 Keamanan & Privasi
+## Security & Isolation
 
-- **Tidak Menyimpan Password/Token:** Tool ini sama sekali tidak menyimpan kredensial mentah. Semua proses pergantian akun menggunakan API resmi bawaan `orca account switch` yang terintegrasi dengan keyring sistem operasi.
-- **Privacy Masking:** Tersedia opsi penyembunyian identitas akun agar aman digunakan saat *live coding*, presentasi, atau pembuatan konten.
+- **Keyring Delegation:** Credentials are never cached, logged, or managed directly by this tool. Account switching relies exclusively on the official `orca account select` CLI invocation delegating to system keyring stores.
+- **Privacy Masking:** The `--mask` CLI flag and UI toggle replace real email addresses with deterministic dummy identifiers, ensuring safety during video capture and public demonstrations.
+- **Unprivileged Execution:** Operates entirely within standard user permissions (`systemd --user`). Root privileges are not required.
 
 ---
 
-## 📄 Lisensi
+## License
 
-Didistribusikan di bawah lisensi **MIT License**. Silakan gunakan, modifikasi, dan kembangkan sesuai kebutuhan.
+This project is licensed under the MIT License. See `LICENSE` for details.
