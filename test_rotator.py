@@ -23,8 +23,8 @@ class TestAccountManager(unittest.TestCase):
         # acc2: exhausted, 100% used
         # acc3: fresh, 0% used
         accounts = [
-            AccountInfo(id="1", email="active@gmail.com", is_active=True, session_used=1.0, weekly_used=1.0),
-            AccountInfo(id="2", email="exhausted@gmail.com", is_active=False, session_used=1.0, weekly_used=1.0),
+            AccountInfo(id="1", email="active@gmail.com", is_active=True, session_used=100.0, weekly_used=100.0),
+            AccountInfo(id="2", email="exhausted@gmail.com", is_active=False, session_used=100.0, weekly_used=100.0),
             AccountInfo(id="3", email="fresh@gmail.com", is_active=False, session_used=0.0, weekly_used=0.0),
         ]
 
@@ -36,8 +36,8 @@ class TestAccountManager(unittest.TestCase):
 
     def test_all_accounts_exhausted_scenario(self):
         accounts = [
-            AccountInfo(id="1", email="acc1@gmail.com", is_active=True, session_used=1.0, weekly_used=1.0, session_resets_at=2000000),
-            AccountInfo(id="2", email="acc2@gmail.com", is_active=False, session_used=1.0, weekly_used=1.0, session_resets_at=1000000),
+            AccountInfo(id="1", email="acc1@gmail.com", is_active=True, session_used=100.0, weekly_used=100.0, session_resets_at=2000000),
+            AccountInfo(id="2", email="acc2@gmail.com", is_active=False, session_used=100.0, weekly_used=100.0, session_resets_at=1000000),
         ]
 
         with patch.object(self.mgr, "fetch_accounts", return_value=(accounts, "1", accounts[0])):
@@ -50,7 +50,7 @@ class TestAccountManager(unittest.TestCase):
 
     def test_round_robin_selection(self):
         accounts = [
-            AccountInfo(id="1", email="acc1@gmail.com", is_active=True, session_used=1.0, weekly_used=1.0),
+            AccountInfo(id="1", email="acc1@gmail.com", is_active=True, session_used=100.0, weekly_used=100.0),
             AccountInfo(id="2", email="acc2@gmail.com", is_active=False, session_used=0.0, weekly_used=0.0),
             AccountInfo(id="3", email="acc3@gmail.com", is_active=False, session_used=0.0, weekly_used=0.0),
         ]

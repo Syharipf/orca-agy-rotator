@@ -107,9 +107,9 @@ def run_live_monitor(config: RotatorConfig):
 
                 session_used = acc.session_used
                 weekly_used = acc.weekly_used
-                session_pct = f"{int(min(1.0, session_used) * 100)}%"
-                weekly_pct = f"{int(min(1.0, weekly_used) * 100)}%"
-                session_bar = format_progress_bar(session_used, width=6)
+                session_pct = f"{int(session_used)}%"
+                weekly_pct = f"{int(weekly_used)}%"
+                session_bar = format_progress_bar(session_used / 100.0, width=6)
                 reset_str = format_ms_timestamp(acc.earliest_reset_timestamp)
 
                 if is_active:

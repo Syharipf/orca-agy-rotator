@@ -134,7 +134,7 @@ export default function activate(orca) {
         weeklyUsed: Number(weekly.usedPercent || 0),
         sessionResetsAt: session.resetsAt,
         weeklyResetsAt: weekly.resetsAt,
-        isExhausted: (session.usedPercent >= 1.0 || weekly.usedPercent >= 1.0),
+        isExhausted: (Number(session.usedPercent || 0) >= 100 || Number(weekly.usedPercent || 0) >= 100),
         earliestReset: session.resetsAt || weekly.resetsAt || (buckets[0] && buckets[0].resetsAt),
         buckets: buckets.map((b) => ({
           name: b.name || b.windowName || 'Bucket',
@@ -181,7 +181,7 @@ export default function activate(orca) {
     }
 
     const shortEmail = formatEmailShort(activeAccount.email);
-    const usedPct = Math.round(activeAccount.sessionUsed * 100);
+    const usedPct = Math.round(activeAccount.sessionUsed);
     const tone = activeAccount.isExhausted ? 'danger' : (usedPct >= 80 ? 'warning' : 'success');
 
     const resetStr = activeAccount.earliestReset ? ` · Reset in ${formatMinutesLeft(activeAccount.earliestReset)}` : '';

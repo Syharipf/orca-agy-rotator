@@ -156,8 +156,8 @@ def cmd_accounts(args, config: RotatorConfig):
             prefix = " "
             email_display = email_str
 
-        session_pct = f"{min(100, int(acc.session_used * 100))}%"
-        weekly_pct = f"{min(100, int(acc.weekly_used * 100))}%"
+        session_pct = f"{int(acc.session_used)}%"
+        weekly_pct = f"{int(acc.weekly_used)}%"
         reset_str = format_ms_timestamp(acc.earliest_reset_timestamp)
 
         col_status = pad_ansi(f"{prefix} {quota_tag}", 15)

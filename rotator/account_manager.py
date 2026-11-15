@@ -17,7 +17,7 @@ class AccountInfo:
     id: str
     email: str
     is_active: bool
-    session_used: float = 0.0  # 0.0 = 0% used, 1.0 = 100% used, 2.0 = over quota
+    session_used: float = 0.0  # Percentage 0-100 (e.g. 2 = 2%, 100 = 100% limit)
     weekly_used: float = 0.0
     session_resets_at: Optional[int] = None  # epoch ms
     weekly_resets_at: Optional[int] = None  # epoch ms
@@ -25,8 +25,8 @@ class AccountInfo:
 
     @property
     def is_exhausted(self) -> bool:
-        """Account is considered exhausted if session or weekly used >= 100% (1.0)."""
-        return self.session_used >= 1.0 or self.weekly_used >= 1.0
+        """Account is considered exhausted if session or weekly used >= 100%."""
+        return self.session_used >= 100.0 or self.weekly_used >= 100.0
 
     @property
     def earliest_reset_timestamp(self) -> Optional[int]:

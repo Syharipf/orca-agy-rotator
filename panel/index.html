@@ -679,8 +679,8 @@
     }
 
     function getMeterColor(val) {
-      if (val >= 1.0) return 'var(--danger)';
-      if (val >= 0.75) return 'var(--warning)';
+      if (val >= 100) return 'var(--danger)';
+      if (val >= 80) return 'var(--warning)';
       return 'var(--success)';
     }
 
@@ -719,7 +719,7 @@
         const setB = (id, idx) => {
           const el = document.getElementById(id);
           if (el && b[idx]) {
-            const p = Math.min(100, Math.round((b[idx].usedPercent || 0) * 100));
+            const p = Math.min(100, Math.round(b[idx].usedPercent || 0));
             el.textContent = `${p}%`;
             el.style.color = getMeterColor(b[idx].usedPercent || 0);
           }
@@ -729,8 +729,8 @@
         setB('bClaude5h', 2);
         setB('bClaudeWeekly', 3);
       } else if (activeAcc) {
-        const sPct = Math.min(100, Math.round((activeAcc.sessionUsed || 0) * 100));
-        const wPct = Math.min(100, Math.round((activeAcc.weeklyUsed || 0) * 100));
+        const sPct = Math.min(100, Math.round(activeAcc.sessionUsed || 0));
+        const wPct = Math.min(100, Math.round(activeAcc.weeklyUsed || 0));
         const g5 = document.getElementById('bGemini5h');
         const gw = document.getElementById('bGeminiWeekly');
         if (g5) { g5.textContent = `${sPct}%`; g5.style.color = getMeterColor(activeAcc.sessionUsed || 0); }
@@ -762,8 +762,8 @@
           statusHtml = '<span class="status-pill pill-ready"><span class="pill-dot"></span>Standby</span>';
         }
 
-        const sessionPct = Math.min(100, Math.round((acc.sessionUsed || 0) * 100));
-        const weeklyPct = Math.min(100, Math.round((acc.weeklyUsed || 0) * 100));
+        const sessionPct = Math.min(100, Math.round(acc.sessionUsed || 0));
+        const weeklyPct = Math.min(100, Math.round(acc.weeklyUsed || 0));
         const sColor = getMeterColor(acc.sessionUsed || 0);
         const wColor = getMeterColor(acc.weeklyUsed || 0);
 
