@@ -1574,13 +1574,16 @@
     }
   }
   updateMaskButtonUI();
+  // Sync initial mask state with worker so status bar is masked
+  rpc('mask.set', { masked: isMasked }).catch(() => {});
 
   document.getElementById('btnMask').addEventListener('click', () => {
     isMasked = !isMasked;
     localStorage.setItem('agy_privacy_mask', isMasked);
     updateMaskButtonUI();
     if (lastData) renderDashboard(lastData);
-    showToast(isMasked ? 'Privacy Mask ON (Emails masked)' : 'Privacy Mask OFF (Real emails shown)');
+    rpc('mask.set', { masked: isMasked }).catch(() => {});
+    showToast(isMasked ? 'Privacy Mask ON (Emails & Status Bar masked)' : 'Privacy Mask OFF (Real emails shown)');
   });
 
   const MOCK_DATA = {

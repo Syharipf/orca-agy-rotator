@@ -263,6 +263,23 @@ export default function activate(orca) {
     };
   }
 
+  const maskFile = join(homedir(), '.config', 'orca', 'antigravity-chat', 'antigravity-acp', 'mask_state.json');
+  let isMasked = true;
+  try {
+    if (existsSync(maskFile)) {
+      const parsed = JSON.parse(readFileSync(maskFile, 'utf8'));
+      if (parsed && typeof parsed.masked === 'boolean') {
+        isMasked = parsed.masked;
+      }
+    }
+  } catch {}
+
+  function saveMaskState(val) {
+    try {
+      writeFileSync(maskFile, JSON.stringify({ masked: val }), 'utf8');
+    } catch {}
+  }
+
   async function updateStatusBar(activeAccount, modelName = 'Gemini') {
     if (!activeAccount) {
       await orca.host.call('statusBar.update', {
@@ -275,12 +292,13 @@ export default function activate(orca) {
       return;
     }
 
-    const shortEmail = formatEmailShort(activeAccount.email);
+    const shortEmail = isMasked ? 'dev-lead' : formatEmailShort(activeAccount.email);
+    const displayEmail = isMasked ? 'dev-lead@example.com' : activeAccount.email;
     const usedPct = Math.round(activeAccount.sessionUsed);
     const tone = activeAccount.isExhausted ? 'danger' : (usedPct >= 80 ? 'warning' : 'success');
 
     const resetStr = activeAccount.earliestReset ? ` · Reset in ${formatMinutesLeft(activeAccount.earliestReset)}` : '';
-    const tooltip = `Antigravity: ${activeAccount.email} (${usedPct}% used) · Model: ${modelName}${resetStr}`;
+    const tooltip = `Antigravity: ${displayEmail} (${usedPct}% used) · Model: ${modelName}${resetStr}`;
 
     await orca.host.call('statusBar.update', {
       id: 'agy-status',
@@ -457,6 +475,21 @@ export default function activate(orca) {
         }
       }
       return { success: true, result: res };
+    });
+
+    orca.panels.handle('mask.set', async (input) => {
+      const val = Boolean(input && (input.masked !== undefined ? input.masked : input));
+      isMasked = val;
+      saveMaskState(isMasked);
+      const state = await fetchAccountsData();
+      if (state && state.activeAccount) {
+        await updateStatusBar(state.activeAccount, state.activeSession?.model);
+      }
+      return { success: true, masked: isMasked };
+    });
+
+    orca.panels.handle('mask.get', async () => {
+      return { masked: isMasked };
     });
   }
 
