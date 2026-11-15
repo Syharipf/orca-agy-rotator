@@ -2,164 +2,256 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Antigravity Quota & Usage Insights</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Antigravity Quota Insights</title>
   <style>
     :root {
-      --bg: var(--orca-background, #0c0d12);
-      --fg: var(--orca-foreground, #e5e7eb);
-      --muted: var(--orca-muted-foreground, #94a3b8);
-      --faint: #334155;
-      --border: var(--orca-border, #1e2430);
-      --card: var(--orca-card, #12151e);
-      --card-inner: #0b0e17;
-      --hover: rgba(255, 255, 255, 0.035);
-      --primary: var(--orca-primary, #4f46e5);
-      --success: #10b981;
-      --success-glow: rgba(16, 185, 129, 0.12);
-      --success-border: rgba(16, 185, 129, 0.28);
-      --warning: #f59e0b;
-      --danger: #ef4444;
-      --danger-glow: rgba(239, 68, 68, 0.12);
-      --danger-border: rgba(239, 68, 68, 0.28);
-      --cyan: #38bdf8;
-      --font-sans: var(--orca-font-sans, "Geist", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
-      --font-mono: var(--orca-font-mono, "Geist Mono", "JetBrains Mono", Menlo, monospace);
+      --bg: var(--orca-background, #0b0e17);
+      --fg: var(--orca-foreground, #ececec);
+      --card: var(--orca-card, #131826);
+      --card-hover: rgba(255, 255, 255, 0.025);
+      --muted-fg: var(--orca-muted-foreground, #94a3b8);
+      --muted: var(--orca-muted, #1e2638);
+      --border: var(--orca-border, #1f283d);
+      --accent: var(--orca-accent, #1d2538);
+      --primary: var(--orca-primary, #38bdf8);
+      --radius: var(--orca-radius, 10px);
+
+      /* Antigravity Signature Color Palette */
+      --agy-blue: #3b82f6;
+      --agy-cyan: #38bdf8;
+      --agy-indigo: #6366f1;
+      --agy-purple: #8b5cf6;
+      --agy-emerald: #10b981;
+      --agy-emerald-glow: rgba(16, 185, 129, 0.15);
+      --agy-emerald-border: rgba(16, 185, 129, 0.35);
+      --agy-warning: #f59e0b;
+      --agy-danger: #ef4444;
+      --agy-danger-glow: rgba(239, 68, 68, 0.15);
+      --agy-danger-border: rgba(239, 68, 68, 0.35);
+
+      --font-sans: var(--orca-font-sans, system-ui, -apple-system, "Segoe UI", Roboto, "Geist", sans-serif);
+      --font-mono: var(--orca-font-mono, "JetBrains Mono", "Geist Mono", "SF Mono", Menlo, monospace);
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    * { box-sizing: border-box; }
     html, body {
-      width: 100%;
-      overflow-x: hidden;
-    }
-    body {
-      font-family: var(--font-sans);
-      background-color: var(--bg);
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
       color: var(--fg);
-      padding: 10px;
-      font-size: 11.5px;
-      line-height: 1.4;
+      font: 12px/1.4 var(--font-sans);
       user-select: none;
       -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
       container-type: inline-size;
+    }
+
+    main {
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      max-width: 900px;
+      margin: 0 auto;
     }
 
     /* Scrollbars */
     ::-webkit-scrollbar { width: 4px; height: 4px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-    ::-webkit-scrollbar-thumb:hover { background: var(--faint); }
+    ::-webkit-scrollbar-thumb:hover { background: #334155; }
 
-    /* Top Navigation Bar */
-    .topbar {
+    /* ================= 1. HERO BANNER ================= */
+    .hero {
+      position: relative;
+      border-radius: var(--radius);
+      overflow: hidden;
+      border: 1px solid var(--border);
+      min-height: 104px;
+      background: linear-gradient(135deg, #0e1e38 0%, #172a50 50%, #0d1629 100%);
+    }
+    .hero-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+      pointer-events: none;
+      opacity: 0.85;
+    }
+    .hero::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(11, 14, 23, 0.25) 0%, rgba(11, 14, 23, 0.75) 100%);
+      pointer-events: none;
+    }
+    .hero-text, .hero-stat {
+      position: relative;
+      z-index: 2;
+      color: #fff;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+    }
+    .hero-text {
+      padding: 10px 12px 0;
       display: flex;
       justify-content: space-between;
-      align-items: center;
-      gap: 8px;
-      padding-bottom: 8px;
-      margin-bottom: 10px;
-      border-bottom: 1px solid var(--border);
+      align-items: flex-start;
     }
-    .topbar-left {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      min-width: 0;
-      flex: 1 1 auto;
-    }
-    .brand-title {
-      font-size: 12px;
+    .hero-title {
+      font-size: 14px;
       font-weight: 700;
       letter-spacing: -0.2px;
       color: #fff;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      margin: 0;
     }
-    .live-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      font-size: 9.5px;
-      font-weight: 600;
-      color: var(--success);
-      background: var(--success-glow);
-      border: 1px solid var(--success-border);
-      padding: 1px 6px;
-      border-radius: 10px;
-      flex-shrink: 0;
+    .hero-updated {
+      font-size: 10px;
+      color: rgba(255, 255, 255, 0.8);
+      margin-top: 2px;
     }
-    .live-dot {
-      width: 5px;
-      height: 5px;
-      border-radius: 50%;
-      background: var(--success);
-      box-shadow: 0 0 6px var(--success);
-      animation: pulse 2.2s infinite;
+    .hero-sparkle {
+      width: 14px;
+      height: 14px;
+      color: #fde047;
+      filter: drop-shadow(0 0 4px #eab308);
     }
-    @keyframes pulse {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.35; transform: scale(0.85); }
+    .hero-stat {
+      position: absolute;
+      left: 12px;
+      bottom: 9px;
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+    }
+    .hero-stat strong {
+      font-size: 24px;
+      font-family: var(--font-mono);
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      color: #ffffff;
+    }
+    .hero-stat .stat-label {
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.85);
     }
 
-    .topbar-actions {
+    /* ================= 2. CONTROLS & SEGMENTED TABS ================= */
+    .controls {
       display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .seg {
+      display: inline-flex;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 2px;
+      background: var(--card);
+    }
+    .seg button {
+      border: 0;
+      background: transparent;
+      color: var(--muted-fg);
+      font: inherit;
+      font-size: 10.5px;
+      font-weight: 500;
+      padding: 3px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.12s ease;
+    }
+    .seg button[aria-checked="true"] {
+      background: var(--accent);
+      color: #fff;
+      font-weight: 600;
+    }
+    .actions-group {
+      display: inline-flex;
       align-items: center;
       gap: 5px;
-      flex-shrink: 0;
     }
     .btn {
-      background: #181d28;
       border: 1px solid var(--border);
+      background: var(--card);
       color: var(--fg);
-      padding: 3.5px 7px;
-      border-radius: 4px;
-      font-size: 10px;
+      border-radius: 6px;
+      padding: 3.5px 8px;
+      font-size: 10.5px;
       font-weight: 500;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
       gap: 4px;
-      transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+      transition: background 0.12s ease, border-color 0.12s ease;
       white-space: nowrap;
     }
     .btn:hover {
-      background: #232a3b;
-      border-color: #3b455d;
-      color: #fff;
+      background: var(--card-hover);
+      border-color: #334155;
     }
-    .btn:active {
-      transform: translateY(1px);
-    }
-    .btn:disabled {
-      opacity: 0.45;
-      cursor: not-allowed;
-    }
-    .btn-primary {
-      background: #064e3b;
-      border-color: #059669;
-      color: #a7f3d0;
+    .btn-rotate {
+      background: #0f2c4d;
+      border-color: #0284c7;
+      color: #7dd3fc;
       font-weight: 600;
     }
-    .btn-primary:hover {
-      background: #047857;
-      border-color: #10b981;
+    .btn-rotate:hover {
+      background: #0284c7;
       color: #fff;
     }
-    .btn svg {
-      width: 11px;
-      height: 11px;
-      stroke-width: 2;
+
+    /* Machine / Session Source Chip */
+    .src-chip {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 6px 10px;
+      font-size: 11px;
+    }
+    .src-left {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-width: 0;
+      overflow: hidden;
+    }
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--agy-emerald);
+      box-shadow: 0 0 6px var(--agy-emerald);
+      flex-shrink: 0;
+    }
+    .src-title {
+      font-weight: 600;
+      color: #fff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .src-turns {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--muted-fg);
+      white-space: nowrap;
     }
 
-    /* Notification / Toast */
+    /* Toast Notification Banner */
     .toast-banner {
       display: none;
-      padding: 5px 8px;
-      margin-bottom: 8px;
-      border-radius: 4px;
-      font-size: 10px;
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 10.5px;
       line-height: 1.35;
-      word-break: break-word;
     }
     .toast-banner.info {
       background: rgba(56, 189, 248, 0.1);
@@ -167,237 +259,232 @@
       color: #bae6fd;
     }
     .toast-banner.error {
-      background: var(--danger-glow);
-      border: 1px solid var(--danger-border);
+      background: var(--agy-danger-glow);
+      border: 1px solid var(--agy-danger-border);
       color: #fca5a5;
     }
 
-    /* KPI Telemetry Grid (Usage Insights KPI Cards) */
-    .kpi-grid {
+    /* ================= 3. 2-COLUMN KPI CARDS ================= */
+    .kpi-row {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      gap: 6px;
-      margin-bottom: 10px;
+      gap: 8px;
     }
-    .kpi-card {
-      background: var(--card);
+    .card {
       border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 7px 9px;
-      position: relative;
-      overflow: hidden;
-    }
-    .kpi-header {
+      border-radius: var(--radius);
+      background: var(--card);
+      padding: 10px 12px;
       display: flex;
-      align-items: center;
+      flex-direction: column;
       justify-content: space-between;
+      min-height: 82px;
+    }
+    .card-title {
+      font-size: 11px;
+      color: var(--muted-fg);
       margin-bottom: 2px;
     }
-    .kpi-label {
-      font-size: 8.5px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.4px;
-      color: var(--muted);
-    }
-    .kpi-tag {
-      font-size: 8px;
+    .card-num {
+      font-size: 20px;
       font-family: var(--font-mono);
-      font-weight: 600;
-      padding: 1px 4px;
-      border-radius: 3px;
-    }
-    .kpi-tag-success {
-      background: var(--success-glow);
-      color: var(--success);
-      border: 1px solid var(--success-border);
-    }
-    .kpi-tag-warning {
-      background: rgba(245, 158, 11, 0.1);
-      color: var(--warning);
-      border: 1px solid rgba(245, 158, 11, 0.25);
-    }
-    .kpi-tag-danger {
-      background: var(--danger-glow);
-      color: var(--danger);
-      border: 1px solid var(--danger-border);
-    }
-    .kpi-val {
-      font-family: var(--font-mono);
-      font-size: 16px;
       font-weight: 700;
       color: #fff;
       line-height: 1.2;
     }
-    .kpi-sub {
-      font-size: 9px;
-      color: var(--muted);
-      margin-top: 2px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .kpi-gauge {
+    .card-meta {
+      font-size: 10px;
+      color: var(--muted-fg);
       margin-top: 4px;
-      height: 3px;
-      background: rgba(255, 255, 255, 0.08);
-      border-radius: 1.5px;
-      overflow: hidden;
-    }
-    .kpi-gauge-fill {
-      height: 100%;
-      border-radius: 1.5px;
-      transition: width 0.3s ease;
-    }
-
-    /* Active Gateway Card */
-    .gateway-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 8px 10px;
-      margin-bottom: 10px;
-    }
-    .gateway-top {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 6px;
-      margin-bottom: 6px;
     }
-    .gateway-pill {
+    .sparkline-svg {
+      width: 100%;
+      height: 18px;
+      margin-top: 4px;
+    }
+    .bar-line {
+      height: 4px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-top: 4px;
+    }
+    .bar-line-fill {
+      height: 100%;
+      border-radius: 2px;
+      transition: width 0.3s ease;
+    }
+
+    /* ================= 4. SECTION WRAPPER & DONUT ================= */
+    .section-card {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--card);
+      padding: 12px;
+    }
+    .section-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    .section-head h2 {
+      font-size: 12.5px;
+      font-weight: 600;
+      color: #fff;
+      margin: 0;
+    }
+    .section-desc {
+      font-size: 10.5px;
+      color: var(--muted-fg);
+      margin-top: 2px;
+    }
+
+    /* Multi-Tier Quota Allocation Bar */
+    .token-bar-track {
+      height: 8px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 4px;
+      overflow: hidden;
+      display: flex;
+      margin-bottom: 8px;
+    }
+    .token-seg {
+      height: 100%;
+      transition: width 0.3s ease;
+    }
+    .legend-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      font-size: 10.5px;
+    }
+    .legend-item {
       display: inline-flex;
       align-items: center;
-      gap: 4px;
-      font-size: 9px;
-      font-weight: 700;
-      color: #34d399;
-      background: var(--success-glow);
-      border: 1px solid var(--success-border);
-      padding: 1.5px 6px;
-      border-radius: 3px;
+      gap: 5px;
     }
-    .gateway-email {
+    .legend-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+    }
+
+    /* Donut Mix Layout */
+    .donut-layout {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      padding: 6px 0;
+      flex-wrap: wrap;
+    }
+    .donut-chart {
+      position: relative;
+      width: 100px;
+      height: 100px;
+      flex-shrink: 0;
+    }
+    .donut-svg {
+      width: 100%;
+      height: 100%;
+      transform: rotate(-90deg);
+    }
+    .donut-circle-bg {
+      fill: none;
+      stroke: rgba(255, 255, 255, 0.08);
+      stroke-width: 12;
+    }
+    .donut-circle-fill {
+      fill: none;
+      stroke: var(--agy-cyan);
+      stroke-width: 12;
+      stroke-linecap: round;
+      transition: stroke-dasharray 0.4s ease;
+    }
+    .donut-label {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+    }
+    .donut-pct {
+      font-family: var(--font-mono);
+      font-size: 16px;
+      font-weight: 700;
+      color: #fff;
+    }
+    .donut-sub {
+      font-size: 8.5px;
+      color: var(--muted-fg);
+      text-transform: uppercase;
+    }
+    .donut-legend {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 10.5px;
+    }
+
+    /* ================= 5. ACCOUNT FLEET RANKING TABLE ================= */
+    .table-wrap {
+      width: 100%;
+      overflow-x: auto;
+    }
+    .fleet-table {
+      width: 100%;
+      border-collapse: collapse;
       font-size: 11px;
+    }
+    .fleet-table th {
+      text-align: left;
+      font-size: 9.5px;
       font-weight: 600;
+      color: var(--muted-fg);
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      padding: 6px 8px;
+      border-bottom: 1px solid var(--border);
+    }
+    .fleet-table td {
+      padding: 7px 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      vertical-align: middle;
+    }
+    .fleet-table tr:hover td {
+      background: var(--card-hover);
+    }
+    .fleet-table tr.active-row td {
+      background: rgba(16, 185, 129, 0.04);
+      border-bottom-color: rgba(16, 185, 129, 0.2);
+    }
+    .rank-num {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--muted-fg);
+      width: 18px;
+    }
+    .acc-col {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-width: 140px;
+    }
+    .acc-email-txt {
+      font-weight: 500;
       color: #fff;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      flex: 1 1 auto;
-      margin-left: 2px;
+      max-width: 160px;
     }
-    .gateway-model {
-      font-family: var(--font-mono);
-      font-size: 9.5px;
-      color: #94a3b8;
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      padding: 1px 5px;
-      border-radius: 3px;
-      white-space: nowrap;
-      flex-shrink: 0;
-    }
-    .gateway-subline {
-      font-family: var(--font-mono);
-      font-size: 9.5px;
-      color: #34d399;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    /* Model Bucket Telemetry Breakdown */
-    .section-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 5px;
-      padding: 0 2px;
-    }
-    .section-title {
-      font-size: 9px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      color: var(--muted);
-    }
-    .section-meta {
-      font-family: var(--font-mono);
-      font-size: 9px;
-      color: var(--muted);
-    }
-
-    .bucket-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(78px, 1fr));
-      gap: 5px;
-      margin-bottom: 10px;
-    }
-    .bucket-cell {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      padding: 4px 6px;
-      min-width: 0;
-    }
-    .bucket-name {
-      font-size: 8px;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 0.2px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      margin-bottom: 1px;
-    }
-    .bucket-val {
-      font-family: var(--font-mono);
-      font-size: 11px;
-      font-weight: 700;
-    }
-
-    /* Accounts Fleet Telemetry */
-    .accounts-list {
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
-      margin-bottom: 8px;
-    }
-    .acc-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 5px;
-      padding: 6px 8px;
-      transition: border-color 0.12s ease, background 0.12s ease;
-    }
-    .acc-card:hover {
-      background: rgba(255, 255, 255, 0.02);
-      border-color: #2b3345;
-    }
-    .acc-card.active-card {
-      border-color: var(--success-border);
-      background: rgba(16, 185, 129, 0.035);
-    }
-
-    .acc-top {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 6px;
-      margin-bottom: 4px;
-    }
-    .acc-ident {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      min-width: 0;
-      flex: 1 1 auto;
-    }
-    .status-tag {
+    .pill {
       font-size: 8.5px;
       font-weight: 700;
       padding: 1px 5px;
@@ -407,589 +494,668 @@
       gap: 3px;
       white-space: nowrap;
     }
-    .tag-in-use {
-      background: var(--success-glow);
+    .pill-active {
+      background: var(--agy-emerald-glow);
       color: #34d399;
-      border: 1px solid var(--success-border);
+      border: 1px solid var(--agy-emerald-border);
     }
-    .tag-standby {
+    .pill-ready {
       background: rgba(148, 163, 184, 0.08);
       color: #94a3b8;
-      border: 1px solid rgba(148, 163, 184, 0.18);
+      border: 1px solid rgba(148, 163, 184, 0.2);
     }
-    .tag-exhausted {
-      background: var(--danger-glow);
+    .pill-limit {
+      background: var(--agy-danger-glow);
       color: #f87171;
-      border: 1px solid var(--danger-border);
+      border: 1px solid var(--agy-danger-border);
     }
-    .acc-email {
-      font-size: 10.5px;
-      font-weight: 600;
-      color: #fff;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+    .meter-cell {
+      min-width: 90px;
     }
-
-    .btn-select {
-      padding: 1.5px 6px;
-      font-size: 9px;
-      border-radius: 3px;
-      background: #181d28;
-      border: 1px solid var(--border);
-      color: #cbd5e1;
-      cursor: pointer;
-      white-space: nowrap;
-      transition: all 0.1s ease;
-    }
-    .btn-select:hover {
-      background: #232a3b;
-      color: #fff;
-      border-color: #3b455d;
-    }
-    .active-badge {
-      font-family: var(--font-mono);
-      font-size: 8.5px;
-      font-weight: 700;
-      color: #34d399;
-      letter-spacing: 0.3px;
-    }
-
-    /* Account Metrics Row */
-    .acc-metrics {
+    .meter-inline {
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-      padding-top: 3px;
-      border-top: 1px solid rgba(255, 255, 255, 0.035);
-      flex-wrap: wrap;
+      gap: 6px;
     }
-    .meter-cluster {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex: 1 1 150px;
-    }
-    .meter-unit {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      font-size: 9px;
-      color: var(--muted);
-      flex: 1 1 auto;
-      min-width: 65px;
-    }
-    .meter-label {
-      font-size: 8px;
-      font-weight: 600;
-      text-transform: uppercase;
-      color: var(--muted);
-      flex-shrink: 0;
-    }
-    .meter-bar {
+    .meter-track {
       flex: 1;
-      height: 3px;
+      height: 4px;
       background: rgba(255, 255, 255, 0.08);
-      border-radius: 1.5px;
+      border-radius: 2px;
       overflow: hidden;
-      min-width: 18px;
+      min-width: 36px;
     }
     .meter-fill {
       height: 100%;
-      border-radius: 1.5px;
+      border-radius: 2px;
     }
-    .meter-text {
+    .meter-num {
       font-family: var(--font-mono);
-      font-size: 8.5px;
-      width: 22px;
+      font-size: 10px;
+      width: 26px;
       text-align: right;
-      flex-shrink: 0;
     }
-    .acc-reset {
-      font-family: var(--font-mono);
-      font-size: 8.5px;
-      color: var(--muted);
+    .btn-select {
+      background: #1e2638;
+      border: 1px solid var(--border);
+      color: #cbd5e1;
+      padding: 2px 7px;
+      font-size: 9.5px;
+      border-radius: 4px;
+      cursor: pointer;
       white-space: nowrap;
-      flex-shrink: 0;
+    }
+    .btn-select:hover {
+      background: #2b364e;
+      color: #fff;
+    }
+    .active-tag {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      font-weight: 700;
+      color: #34d399;
     }
 
-    /* Footer Telemetry Bar */
-    .insights-footer {
+    /* Footer */
+    footer {
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 6px;
-      padding: 6px 2px 2px;
+      font-size: 9.5px;
+      color: var(--muted-fg);
+      padding-top: 6px;
       border-top: 1px solid var(--border);
-      font-family: var(--font-mono);
-      font-size: 9px;
-      color: var(--muted);
-    }
-
-    .empty-state {
-      padding: 16px 10px;
-      text-align: center;
-      color: var(--muted);
-      font-size: 11px;
-      border: 1px dashed var(--border);
-      border-radius: 5px;
     }
   </style>
 </head>
 <body>
 
-  <!-- Top Bar -->
-  <div class="topbar">
-    <div class="topbar-left">
-      <span class="brand-title">Quota Insights</span>
-      <span class="live-badge">
-        <span class="live-dot"></span>
-        Live
-      </span>
+<main>
+  <!-- 1. HERO BANNER (Usage Insights Style) -->
+  <section class="hero">
+    <!-- Starry Pixel Skyline SVG Canvas -->
+    <svg class="hero-canvas" viewBox="0 0 400 120" preserveAspectRatio="none">
+      <defs>
+        <linearGradient id="twilightGrad" x1="0" y1="0" x2="0" y2="120" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#1e3a8a"/>
+          <stop offset="60%" stop-color="#2563eb"/>
+          <stop offset="100%" stop-color="#0b0e17"/>
+        </linearGradient>
+      </defs>
+      <rect width="400" height="120" fill="url(#twilightGrad)"/>
+      <!-- Pixel skyline blocks -->
+      <g fill="#0b0e17" fill-opacity="0.85">
+        <rect x="20" y="70" width="35" height="50"/>
+        <rect x="70" y="55" width="40" height="65"/>
+        <rect x="130" y="75" width="30" height="45"/>
+        <rect x="180" y="50" width="45" height="70"/>
+        <rect x="245" y="65" width="35" height="55"/>
+        <rect x="300" y="58" width="40" height="62"/>
+        <rect x="355" y="72" width="35" height="48"/>
+      </g>
+      <!-- Twinkling stars -->
+      <g fill="#93c5fd" fill-opacity="0.6">
+        <circle cx="45" cy="25" r="1"/>
+        <circle cx="110" cy="18" r="1.5"/>
+        <circle cx="170" cy="30" r="1"/>
+        <circle cx="230" cy="15" r="1.2"/>
+        <circle cx="290" cy="28" r="1"/>
+        <circle cx="360" cy="20" r="1.5"/>
+      </g>
+    </svg>
+
+    <div class="hero-text">
+      <div>
+        <h1 class="hero-title">Antigravity Quota Insights</h1>
+        <div id="heroUpdatedText" class="hero-updated">Updated just now · Real-time 3.5s</div>
+      </div>
+      <!-- Sparkle Icon -->
+      <svg class="hero-sparkle" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M12 0l2.5 8.5L23 11l-8.5 2.5L12 22l-2.5-8.5L1 11l8.5-2.5z"/>
+      </svg>
     </div>
-    <div class="topbar-actions">
-      <button id="btnMask" class="btn" title="Toggle Privacy Masking">
+
+    <div class="hero-stat">
+      <strong id="heroHeroNum">0%</strong>
+      <span id="heroHeroLabel" class="stat-label">Session Quota · 5 / 6 Accounts Available</span>
+    </div>
+  </section>
+
+  <!-- 2. CONTROLS BAR -->
+  <section class="controls">
+    <!-- Segmented Tab Toggle -->
+    <div class="seg" role="tablist">
+      <button id="tabOverview" role="tab" aria-checked="true">Overview</button>
+      <button id="tabFleet" role="tab" aria-checked="false">Fleet</button>
+      <button id="tabBreakdown" role="tab" aria-checked="false">Breakdown</button>
+    </div>
+
+    <!-- Actions -->
+    <div class="actions-group">
+      <button id="btnMask" class="btn" title="Toggle Privacy Mask (Sembunyikan email asli)">
         <span id="maskBtnText">Mask: Off</span>
       </button>
-      <button id="btnRefresh" class="btn" title="Refresh Telemetry">
+      <button id="btnRefresh" class="btn" title="Sync Quota Telemetry">
         Sync
       </button>
-      <button id="btnRotate" class="btn btn-primary" title="Rotate to account with lowest quota">
-        Rotate Best
+      <button id="btnRotate" class="btn btn-rotate" title="Rotate to account with lowest quota">
+        ⚡ Rotate Best
       </button>
     </div>
+  </section>
+
+  <!-- Active Route Chip -->
+  <div class="src-chip">
+    <div class="src-left">
+      <span class="status-dot"></span>
+      <span id="srcRouteTitle" class="src-title">Active Route: Loading...</span>
+    </div>
+    <span id="srcTargetSub" class="src-turns">Terminal 1 · Auto-resume armed</span>
   </div>
 
   <!-- Toast Banner -->
   <div id="statusToast" class="toast-banner"></div>
 
-  <!-- KPI Telemetry Grid (Insights KPI Cards) -->
-  <div class="kpi-grid">
-    <!-- KPI 1: Active Session Quota -->
-    <div class="kpi-card">
-      <div class="kpi-header">
-        <span class="kpi-label">Session Quota</span>
-        <span id="kpiSessionTag" class="kpi-tag kpi-tag-success">Optimal</span>
+  <!-- 3. 2-COLUMN KPI METRIC CARDS -->
+  <section id="kpiContainer" class="kpi-row">
+    <!-- Card 1: Session Quota -->
+    <div class="card">
+      <div class="card-title">Session Quota (5h)</div>
+      <div id="kpiSessionVal" class="card-num">0%</div>
+      <div class="bar-line">
+        <div id="kpiSessionBar" class="bar-line-fill" style="width: 0%; background: var(--agy-emerald);"></div>
       </div>
-      <div id="kpiSessionVal" class="kpi-val">0%</div>
-      <div class="kpi-sub">5-Hour Allowance Window</div>
-      <div class="kpi-gauge">
-        <div id="kpiSessionGauge" class="kpi-gauge-fill" style="width: 0%; background: var(--success);"></div>
-      </div>
-    </div>
-
-    <!-- KPI 2: Weekly Allowance -->
-    <div class="kpi-card">
-      <div class="kpi-header">
-        <span class="kpi-label">Weekly Quota</span>
-        <span id="kpiWeeklyTag" class="kpi-tag kpi-tag-success">0% used</span>
-      </div>
-      <div id="kpiWeeklyVal" class="kpi-val">0%</div>
-      <div id="kpiWeeklySub" class="kpi-sub">Rolling 7-Day Window</div>
-      <div class="kpi-gauge">
-        <div id="kpiWeeklyGauge" class="kpi-gauge-fill" style="width: 0%; background: var(--success);"></div>
+      <div class="card-meta">
+        <span id="kpiSessionStatus">Optimal allowance</span>
+        <span>5-hour window</span>
       </div>
     </div>
 
-    <!-- KPI 3: Fleet Capacity Pool -->
-    <div class="kpi-card">
-      <div class="kpi-header">
-        <span class="kpi-label">Pool Capacity</span>
-        <span id="kpiPoolTag" class="kpi-tag kpi-tag-success">Ready</span>
+    <!-- Card 2: Weekly Quota -->
+    <div class="card">
+      <div class="card-title">Weekly Quota</div>
+      <div id="kpiWeeklyVal" class="card-num">0%</div>
+      <div class="bar-line">
+        <div id="kpiWeeklyBar" class="bar-line-fill" style="width: 0%; background: var(--agy-cyan);"></div>
       </div>
-      <div id="kpiPoolVal" class="kpi-val">5 / 6</div>
-      <div id="kpiPoolSub" class="kpi-sub">83% Accounts Available</div>
-      <div class="kpi-gauge">
-        <div id="kpiPoolGauge" class="kpi-gauge-fill" style="width: 83%; background: var(--success);"></div>
+      <div class="card-meta">
+        <span id="kpiWeeklyStatus">0% consumed</span>
+        <span id="kpiWeeklyReset">7-day rolling</span>
+      </div>
+    </div>
+
+    <!-- Card 3: Fleet Capacity Pool -->
+    <div class="card">
+      <div class="card-title">Fleet Capacity</div>
+      <div id="kpiPoolVal" class="card-num">5 / 6</div>
+      <div class="bar-line">
+        <div id="kpiPoolBar" class="bar-line-fill" style="width: 83%; background: var(--agy-emerald);"></div>
+      </div>
+      <div class="card-meta">
+        <span id="kpiPoolStatus">83% accounts ready</span>
+        <span>Zero-downtime pool</span>
       </div>
     </div>
 
-    <!-- KPI 4: Failover Guard -->
-    <div class="kpi-card">
-      <div class="kpi-header">
-        <span class="kpi-label">Failover Engine</span>
-        <span class="kpi-tag kpi-tag-success">Armed</span>
+    <!-- Card 4: Failover Velocity -->
+    <div class="card">
+      <div class="card-title">Failover Engine</div>
+      <div class="card-num">&lt; 100ms</div>
+      <div class="bar-line">
+        <div class="bar-line-fill" style="width: 100%; background: var(--agy-indigo);"></div>
       </div>
-      <div id="kpiFailoverVal" class="kpi-val">&lt; 100ms</div>
-      <div class="kpi-sub">Cooldown: 30s · Safe</div>
-      <div class="kpi-gauge">
-        <div class="kpi-gauge-fill" style="width: 100%; background: var(--cyan);"></div>
+      <div class="card-meta">
+        <span>Cooldown: 30s safe</span>
+        <span>Circuit: 0/5 nominal</span>
       </div>
     </div>
-  </div>
+  </section>
 
-  <!-- Active Route & Gateway Banner -->
-  <div class="gateway-card">
-    <div class="gateway-top">
-      <span class="gateway-pill">● ACTIVE ROUTE</span>
-      <span id="gatewayEmailText" class="gateway-email">Loading...</span>
-      <span id="gatewayModelText" class="gateway-model">Gemini Models</span>
+  <!-- 4. MODEL TIER QUOTA BREAKDOWN -->
+  <section id="breakdownSection" class="section-card">
+    <div class="section-head">
+      <div>
+        <h2>Quota Allocation by Model Tier</h2>
+        <div class="section-desc">Real-time quota telemetry across Gemini, Claude, and GPT models</div>
+      </div>
     </div>
-    <div class="gateway-subline">
-      <span>↳</span>
-      <span id="gatewaySessionText">Target: Terminal 1 · Auto-resume armed: "lanjutkan pengerjaan tadi"</span>
+
+    <!-- Multi-Color Segmented Bar -->
+    <div class="token-bar-track">
+      <div id="segGemini" class="token-seg" style="width: 50%; background: var(--agy-cyan);"></div>
+      <div id="segClaude" class="token-seg" style="width: 35%; background: var(--agy-purple);"></div>
+      <div id="segReserve" class="token-seg" style="width: 15%; background: var(--agy-emerald);"></div>
     </div>
-  </div>
 
-  <!-- Model Quota Breakdown (Dynamic Buckets) -->
-  <div class="section-header">
-    <span class="section-title">Model Quota Telemetry</span>
-    <span class="section-meta">Multi-Tier Buckets</span>
-  </div>
-  <div id="bucketGrid" class="bucket-grid">
-    <!-- Dynamic model bucket cells injected here -->
-  </div>
+    <!-- Legend Row -->
+    <div class="legend-row">
+      <div class="legend-item">
+        <span class="legend-dot" style="background: var(--agy-cyan);"></span>
+        <span id="legendGeminiText">Gemini Models (0% used)</span>
+      </div>
+      <div class="legend-item">
+        <span class="legend-dot" style="background: var(--agy-purple);"></span>
+        <span id="legendClaudeText">Claude &amp; GPT Models (0% used)</span>
+      </div>
+      <div class="legend-item">
+        <span class="legend-dot" style="background: var(--agy-emerald);"></span>
+        <span>Available Headroom (100%)</span>
+      </div>
+    </div>
+  </section>
 
-  <!-- Account Fleet Telemetry List -->
-  <div class="section-header">
-    <span class="section-title">Account Fleet Status</span>
-    <span id="accountsCountText" class="section-meta">0 accounts</span>
-  </div>
-  <div id="accountsList" class="accounts-list">
-    <!-- Dynamic account cards injected here -->
-  </div>
+  <!-- 5. FLEET CAPACITY MIX (Donut Chart) -->
+  <section id="mixSection" class="section-card">
+    <div class="section-head">
+      <div>
+        <h2>Fleet Capacity Mix</h2>
+        <div class="section-desc">Account availability and quota state distribution</div>
+      </div>
+    </div>
 
-  <!-- Insights Footer -->
-  <div class="insights-footer">
-    <span id="footerLastSync">Telemetry: Real-time (3.5s)</span>
-    <span>Anti-Ban: 5 / 180s Active</span>
-  </div>
+    <div class="donut-layout">
+      <!-- Donut SVG -->
+      <div class="donut-chart">
+        <svg class="donut-svg" viewBox="0 0 100 100">
+          <circle class="donut-circle-bg" cx="50" cy="50" r="38"/>
+          <circle id="donutCircleFill" class="donut-circle-fill" cx="50" cy="50" r="38" stroke-dasharray="200 240"/>
+        </svg>
+        <div class="donut-label">
+          <div id="donutCenterPct" class="donut-pct">83%</div>
+          <div class="donut-sub">Ready</div>
+        </div>
+      </div>
 
-  <script>
-    // Orca RPC helper
-    function rpc(action, payload) {
-      const host = window.orca || globalThis.orca;
-      if (host && host.plugin && typeof host.plugin.call === 'function') {
-        return host.plugin.call(action, payload);
+      <!-- Donut Legend -->
+      <div class="donut-legend">
+        <div class="legend-item">
+          <span class="legend-dot" style="background: var(--agy-emerald);"></span>
+          <span id="donutReadyLegend"><b>5 Accounts</b> Ready for Failover (83%)</span>
+        </div>
+        <div class="legend-item">
+          <span class="legend-dot" style="background: var(--agy-cyan);"></span>
+          <span id="donutInUseLegend"><b>1 Account</b> Actively Routing (17%)</span>
+        </div>
+        <div class="legend-item">
+          <span class="legend-dot" style="background: var(--agy-danger);"></span>
+          <span id="donutExhaustLegend"><b>0 Accounts</b> Rate-Limited (0%)</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6. ACCOUNT FLEET RANKING TABLE -->
+  <section id="fleetSection" class="section-card">
+    <div class="section-head">
+      <div>
+        <h2>Account Fleet Ranking</h2>
+        <div class="section-desc">Ranked by lowest quota usage for priority failover</div>
+      </div>
+      <span id="fleetTableCount" class="muted" style="font-size:10px; font-family:var(--font-mono);">6 accounts</span>
+    </div>
+
+    <div class="table-wrap">
+      <table class="fleet-table">
+        <thead>
+          <tr>
+            <th style="width:20px;">#</th>
+            <th>Account</th>
+            <th>Session (5h)</th>
+            <th>Weekly</th>
+            <th>Reset In</th>
+            <th style="text-align:right;">Action</th>
+          </tr>
+        </thead>
+        <tbody id="fleetTableBody">
+          <!-- Dynamic Account Rows Injected Here -->
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <span id="footerSyncStatus">Telemetry: Real-time (3.5s)</span>
+    <span>Auto-Resume: "lanjutkan pengerjaan tadi"</span>
+  </footer>
+</main>
+
+<script>
+  // RPC Bridge
+  function rpc(action, payload) {
+    const host = window.orca || globalThis.orca;
+    if (host && host.plugin && typeof host.plugin.call === 'function') {
+      return host.plugin.call(action, payload);
+    }
+    return Promise.reject(new Error('Orca plugin host API unavailable'));
+  }
+
+  function showToast(msg, isError = false) {
+    const el = document.getElementById('statusToast');
+    el.textContent = msg;
+    el.className = 'toast-banner ' + (isError ? 'error' : 'info');
+    el.style.display = 'block';
+    setTimeout(() => { el.style.display = 'none'; }, 3500);
+  }
+
+  function formatMinutes(tsMs) {
+    if (!tsMs || isNaN(tsMs)) return '—';
+    const m = Math.max(0, Math.floor((tsMs - Date.now()) / 60000));
+    if (m === 0) return 'Reset now';
+    if (m > 60) {
+      const h = Math.floor(m / 60);
+      const remM = m % 60;
+      return `${h}h ${remM}m`;
+    }
+    return `${m}m left`;
+  }
+
+  let isMasked = localStorage.getItem('agy_privacy_mask') === 'true' || window.location.search.includes('mask=1') || window.location.search.includes('preview=dummy');
+  let lastData = null;
+
+  const DUMMY_EMAILS = [
+    'dev-lead@example.com',
+    'worker-alpha@example.com',
+    'runner-beta@example.com',
+    'agent-gamma@example.com',
+    'backup-ops@example.com',
+    'standby-pool@example.com'
+  ];
+
+  function getDisplayEmail(email, index = 0) {
+    if (!email) return 'None';
+    if (isMasked) {
+      return DUMMY_EMAILS[index % DUMMY_EMAILS.length];
+    }
+    return email;
+  }
+
+  function getMeterColor(val) {
+    if (val >= 100) return 'var(--agy-danger)';
+    if (val >= 80) return 'var(--agy-warning)';
+    return 'var(--agy-emerald)';
+  }
+
+  function renderDashboard(data) {
+    if (!data) return;
+    lastData = data;
+
+    const activeAcc = data.activeAccount;
+    const accounts = data.accounts || [];
+
+    // 1. Hero Updates
+    const sUsed = activeAcc ? Math.min(100, Math.round(activeAcc.sessionUsed || 0)) : 0;
+    const wUsed = activeAcc ? Math.min(100, Math.round(activeAcc.weeklyUsed || 0)) : 0;
+
+    document.getElementById('heroHeroNum').textContent = `${sUsed}%`;
+    const totalAcc = accounts.length;
+    const availAcc = accounts.filter(a => !a.isExhausted).length;
+    document.getElementById('heroHeroLabel').textContent = `Session Quota · ${availAcc} / ${totalAcc} Accounts Ready`;
+
+    const now = new Date();
+    document.getElementById('heroUpdatedText').textContent = `Updated ${now.toLocaleTimeString()} · Real-time 3.5s`;
+
+    // 2. Active Route Chip
+    const activeEmail = activeAcc ? getDisplayEmail(activeAcc.email, 0) : 'None';
+    document.getElementById('srcRouteTitle').textContent = `Active Route: ${activeEmail}`;
+    const model = data.activeSession?.model || 'Gemini 2.5 Pro / Claude 3.7';
+    document.getElementById('srcTargetSub').textContent = `Model: ${model} · "lanjutkan pengerjaan" armed`;
+
+    // 3. 2-Column KPI Cards
+    document.getElementById('kpiSessionVal').textContent = `${sUsed}%`;
+    const sBar = document.getElementById('kpiSessionBar');
+    sBar.style.width = `${sUsed}%`;
+    sBar.style.background = getMeterColor(sUsed);
+    document.getElementById('kpiSessionStatus').textContent = sUsed === 0 ? 'Optimal (0% used)' : `${sUsed}% consumed`;
+
+    document.getElementById('kpiWeeklyVal').textContent = `${wUsed}%`;
+    const wBar = document.getElementById('kpiWeeklyBar');
+    wBar.style.width = `${wUsed}%`;
+    wBar.style.background = getMeterColor(wUsed);
+    document.getElementById('kpiWeeklyStatus').textContent = `${wUsed}% consumed`;
+    if (activeAcc && activeAcc.weeklyResetsAt) {
+      document.getElementById('kpiWeeklyReset').textContent = `Reset: ${formatMinutes(activeAcc.weeklyResetsAt)}`;
+    }
+
+    const poolPct = totalAcc > 0 ? Math.round((availAcc / totalAcc) * 100) : 0;
+    document.getElementById('kpiPoolVal').textContent = `${availAcc} / ${totalAcc}`;
+    document.getElementById('kpiPoolBar').style.width = `${poolPct}%`;
+    document.getElementById('kpiPoolStatus').textContent = `${poolPct}% accounts ready`;
+
+    // 4. Model Tier Breakdown Bar
+    let geminiPct = 0;
+    let claudePct = 0;
+    if (activeAcc && activeAcc.buckets && activeAcc.buckets.length > 0) {
+      activeAcc.buckets.forEach(b => {
+        const name = (b.name || '').toLowerCase();
+        if (name.includes('gemini')) geminiPct = Math.max(geminiPct, b.usedPercent || 0);
+        if (name.includes('claude') || name.includes('gpt')) claudePct = Math.max(claudePct, b.usedPercent || 0);
+      });
+    }
+    document.getElementById('legendGeminiText').textContent = `Gemini Models (${Math.round(geminiPct)}% used)`;
+    document.getElementById('legendClaudeText').textContent = `Claude & GPT Models (${Math.round(claudePct)}% used)`;
+
+    // 5. Donut Chart
+    document.getElementById('donutCenterPct').textContent = `${poolPct}%`;
+    // Circumference = 2 * PI * 38 = ~238.7
+    const circ = 238.7;
+    const dashFill = (poolPct / 100) * circ;
+    document.getElementById('donutCircleFill').style.strokeDasharray = `${dashFill} ${circ}`;
+    document.getElementById('donutReadyLegend').innerHTML = `<b>${availAcc} Accounts</b> Ready for Failover (${poolPct}%)`;
+    document.getElementById('donutInUseLegend').innerHTML = `<b>1 Account</b> Actively Routing (${totalAcc > 0 ? Math.round(100/totalAcc) : 0}%)`;
+    const exhAcc = totalAcc - availAcc;
+    document.getElementById('donutExhaustLegend').innerHTML = `<b>${exhAcc} Accounts</b> Rate-Limited (${totalAcc > 0 ? Math.round((exhAcc/totalAcc)*100) : 0}%)`;
+
+    // 6. Fleet Ranking Table
+    const tbody = document.getElementById('fleetTableBody');
+    tbody.innerHTML = '';
+    document.getElementById('fleetTableCount').textContent = `${totalAcc} accounts`;
+
+    accounts.forEach((acc, idx) => {
+      const tr = document.createElement('tr');
+      if (acc.isActive) tr.className = 'active-row';
+
+      let pillHtml = '';
+      if (acc.isActive) {
+        pillHtml = '<span class="pill pill-active">● IN USE</span>';
+      } else if (acc.isExhausted) {
+        pillHtml = '<span class="pill pill-limit">✕ LIMIT</span>';
+      } else {
+        pillHtml = '<span class="pill pill-ready">○ READY</span>';
       }
-      return Promise.reject(new Error('Orca plugin host API unavailable'));
-    }
 
-    function showToast(msg, isError = false) {
-      const el = document.getElementById('statusToast');
-      el.textContent = msg;
-      el.className = 'toast-banner ' + (isError ? 'error' : 'info');
-      el.style.display = 'block';
-      setTimeout(() => { el.style.display = 'none'; }, 3500);
-    }
+      const sVal = Math.min(100, Math.round(acc.sessionUsed || 0));
+      const wVal = Math.min(100, Math.round(acc.weeklyUsed || 0));
+      const sColor = getMeterColor(acc.sessionUsed || 0);
+      const wColor = getMeterColor(acc.weeklyUsed || 0);
+      const email = getDisplayEmail(acc.email, idx);
 
-    function formatMinutes(tsMs) {
-      if (!tsMs || isNaN(tsMs)) return '—';
-      const m = Math.max(0, Math.floor((tsMs - Date.now()) / 60000));
-      if (m === 0) return 'Reset now';
-      if (m > 60) {
-        const h = Math.floor(m / 60);
-        const remM = m % 60;
-        return `${h}h ${remM}m left`;
-      }
-      return `${m}m left`;
-    }
+      const actionHtml = acc.isActive
+        ? '<span class="active-tag">ACTIVE</span>'
+        : `<button class="btn-select" data-email="${acc.email}">Select</button>`;
 
-    let isMasked = localStorage.getItem('agy_privacy_mask') === 'true' || window.location.search.includes('mask=1') || window.location.search.includes('preview=dummy');
-    let lastData = null;
+      tr.innerHTML = `
+        <td class="rank-num">${idx + 1}</td>
+        <td>
+          <div class="acc-col">
+            ${pillHtml}
+            <span class="acc-email-txt" title="${email}">${email}</span>
+          </div>
+        </td>
+        <td class="meter-cell">
+          <div class="meter-inline">
+            <div class="meter-track"><div class="meter-fill" style="width:${sVal}%; background:${sColor};"></div></div>
+            <span class="meter-num" style="color:${sColor};">${sVal}%</span>
+          </div>
+        </td>
+        <td class="meter-cell">
+          <div class="meter-inline">
+            <div class="meter-track"><div class="meter-fill" style="width:${wVal}%; background:${wColor};"></div></div>
+            <span class="meter-num" style="color:${wColor};">${wVal}%</span>
+          </div>
+        </td>
+        <td style="font-family:var(--font-mono); font-size:10px; color:var(--muted-fg);">
+          ${formatMinutes(acc.earliestReset)}
+        </td>
+        <td style="text-align:right;">
+          ${actionHtml}
+        </td>
+      `;
 
-    const DUMMY_EMAILS = [
-      'dev-lead@example.com',
-      'worker-alpha@example.com',
-      'runner-beta@example.com',
-      'agent-gamma@example.com',
-      'backup-ops@example.com',
-      'standby-pool@example.com'
-    ];
+      tbody.appendChild(tr);
+    });
 
-    function getDisplayEmail(email, index = 0) {
-      if (!email) return 'None';
+    // Bind select buttons
+    tbody.querySelectorAll('.btn-select').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const em = e.currentTarget.getAttribute('data-email');
+        selectAccount(em, e.currentTarget);
+      });
+    });
+
+    document.getElementById('footerSyncStatus').textContent = `Sync: ${now.toLocaleTimeString()} · Real-time 3.5s`;
+  }
+
+  // Privacy Mask UI
+  function updateMaskButtonUI() {
+    const btnText = document.getElementById('maskBtnText');
+    const btn = document.getElementById('btnMask');
+    if (btnText) btnText.textContent = isMasked ? 'Mask: ON' : 'Mask: OFF';
+    if (btn) {
       if (isMasked) {
-        return DUMMY_EMAILS[index % DUMMY_EMAILS.length];
-      }
-      return email;
-    }
-
-    function getMeterColor(val) {
-      if (val >= 100) return 'var(--danger)';
-      if (val >= 80) return 'var(--warning)';
-      return 'var(--success)';
-    }
-
-    function renderDashboard(data) {
-      if (!data) return;
-      lastData = data;
-
-      const activeAcc = data.activeAccount;
-      const accounts = data.accounts || [];
-
-      // 1. KPI Telemetry
-      const sUsed = activeAcc ? Math.min(100, Math.round(activeAcc.sessionUsed || 0)) : 0;
-      const wUsed = activeAcc ? Math.min(100, Math.round(activeAcc.weeklyUsed || 0)) : 0;
-
-      document.getElementById('kpiSessionVal').textContent = `${sUsed}%`;
-      const sGauge = document.getElementById('kpiSessionGauge');
-      sGauge.style.width = `${sUsed}%`;
-      sGauge.style.background = getMeterColor(sUsed);
-
-      const sTag = document.getElementById('kpiSessionTag');
-      if (sUsed >= 100) {
-        sTag.textContent = 'Exhausted';
-        sTag.className = 'kpi-tag kpi-tag-danger';
-      } else if (sUsed >= 80) {
-        sTag.textContent = 'High';
-        sTag.className = 'kpi-tag kpi-tag-warning';
+        btn.style.borderColor = 'var(--agy-emerald-border)';
+        btn.style.color = '#34d399';
       } else {
-        sTag.textContent = 'Optimal';
-        sTag.className = 'kpi-tag kpi-tag-success';
-      }
-
-      document.getElementById('kpiWeeklyVal').textContent = `${wUsed}%`;
-      const wGauge = document.getElementById('kpiWeeklyGauge');
-      wGauge.style.width = `${wUsed}%`;
-      wGauge.style.background = getMeterColor(wUsed);
-
-      const wTag = document.getElementById('kpiWeeklyTag');
-      wTag.textContent = wUsed >= 100 ? 'Limit' : `${wUsed}% used`;
-      wTag.className = wUsed >= 100 ? 'kpi-tag kpi-tag-danger' : 'kpi-tag kpi-tag-success';
-
-      const stats = data.globalStats || {};
-      const total = stats.totalAccounts || accounts.length;
-      const avail = stats.availableAccounts !== undefined ? stats.availableAccounts : accounts.filter(a => !a.isExhausted).length;
-      const poolPct = total > 0 ? Math.round((avail / total) * 100) : 0;
-
-      document.getElementById('kpiPoolVal').textContent = `${avail} / ${total}`;
-      document.getElementById('kpiPoolSub').textContent = `${poolPct}% Accounts Available`;
-      const pGauge = document.getElementById('kpiPoolGauge');
-      pGauge.style.width = `${poolPct}%`;
-      pGauge.style.background = poolPct <= 20 ? 'var(--danger)' : (poolPct <= 50 ? 'var(--warning)' : 'var(--success)');
-
-      // 2. Active Gateway Card
-      if (activeAcc) {
-        document.getElementById('gatewayEmailText').textContent = getDisplayEmail(activeAcc.email, 0);
-      } else {
-        document.getElementById('gatewayEmailText').textContent = 'No Active Account';
-      }
-
-      const model = data.activeSession?.model || 'Gemini 2.5 Pro / Claude 3.7';
-      document.getElementById('gatewayModelText').textContent = model;
-      const sessionTitle = isMasked ? 'Terminal 1 (PTY)' : (data.activeSession?.title || 'Terminal 1');
-      document.getElementById('gatewaySessionText').textContent = `Target: ${sessionTitle} · Auto-resume armed: "lanjutkan pengerjaan tadi"`;
-
-      // 3. Model Buckets Telemetry Breakdown
-      const grid = document.getElementById('bucketGrid');
-      grid.innerHTML = '';
-      if (activeAcc && activeAcc.buckets && activeAcc.buckets.length > 0) {
-        activeAcc.buckets.forEach(b => {
-          const rawName = b.name || b.windowName || 'Model';
-          let shortTitle = rawName
-            .replace(/·\s*(?:Weekly\s*Limit\s*Remaining|Five\s*Hour\s*Limit\s*Remaining|Limit\s*Remaining)/i, '')
-            .replace(/Models?/i, '')
-            .trim();
-          if (rawName.toLowerCase().includes('five') || rawName.toLowerCase().includes('5h')) {
-            shortTitle += ' (5h)';
-          } else if (rawName.toLowerCase().includes('week')) {
-            shortTitle += ' (Wk)';
-          }
-
-          const p = Math.min(100, Math.round(b.usedPercent || 0));
-          const color = getMeterColor(b.usedPercent || 0);
-
-          const cell = document.createElement('div');
-          cell.className = 'bucket-cell';
-          cell.title = `${rawName}: ${p}% used`;
-          cell.innerHTML = `
-            <div class="bucket-name">${shortTitle}</div>
-            <div class="bucket-val" style="color: ${color};">${p}%</div>
-          `;
-          grid.appendChild(cell);
-        });
-      } else if (activeAcc) {
-        grid.innerHTML = `
-          <div class="bucket-cell"><div class="bucket-name">SESSION (5H)</div><div class="bucket-val" style="color:${getMeterColor(sUsed)}">${sUsed}%</div></div>
-          <div class="bucket-cell"><div class="bucket-name">WEEKLY</div><div class="bucket-val" style="color:${getMeterColor(wUsed)}">${wUsed}%</div></div>
-        `;
-      }
-
-      // 4. Accounts Fleet List
-      const container = document.getElementById('accountsList');
-      container.innerHTML = '';
-      document.getElementById('accountsCountText').textContent = `${accounts.length} accounts`;
-
-      if (accounts.length === 0) {
-        container.innerHTML = '<div class="empty-state">No Antigravity accounts registered in Orca.</div>';
-        return;
-      }
-
-      accounts.forEach((acc, idx) => {
-        const card = document.createElement('div');
-        card.className = 'acc-card' + (acc.isActive ? ' active-card' : '');
-
-        let statusHtml = '';
-        if (acc.isActive) {
-          statusHtml = '<span class="status-tag tag-in-use">● IN USE</span>';
-        } else if (acc.isExhausted) {
-          statusHtml = '<span class="status-tag tag-exhausted">✕ LIMIT</span>';
-        } else {
-          statusHtml = '<span class="status-tag tag-standby">○ READY</span>';
-        }
-
-        const sessionPct = Math.min(100, Math.round(acc.sessionUsed || 0));
-        const weeklyPct = Math.min(100, Math.round(acc.weeklyUsed || 0));
-        const sColor = getMeterColor(acc.sessionUsed || 0);
-        const wColor = getMeterColor(acc.weeklyUsed || 0);
-
-        const displayEmail = getDisplayEmail(acc.email, idx);
-
-        const actionHtml = acc.isActive
-          ? '<span class="active-badge">ACTIVE ROUTE</span>'
-          : `<button class="btn-select" data-email="${acc.email}">Select</button>`;
-
-        card.innerHTML = `
-          <div class="acc-top">
-            <div class="acc-ident">
-              ${statusHtml}
-              <span class="acc-email" title="${displayEmail}">${displayEmail}</span>
-            </div>
-            <div class="acc-actions">
-              ${actionHtml}
-            </div>
-          </div>
-
-          <div class="acc-metrics">
-            <div class="meter-cluster">
-              <div class="meter-unit">
-                <span class="meter-label">Ses</span>
-                <div class="meter-bar"><div class="meter-fill" style="width: ${sessionPct}%; background: ${sColor};"></div></div>
-                <span class="meter-text" style="color: ${sColor};">${sessionPct}%</span>
-              </div>
-              <div class="meter-unit">
-                <span class="meter-label">Wk</span>
-                <div class="meter-bar"><div class="meter-fill" style="width: ${weeklyPct}%; background: ${wColor};"></div></div>
-                <span class="meter-text" style="color: ${wColor};">${weeklyPct}%</span>
-              </div>
-            </div>
-            <div class="acc-reset">
-              Reset: ${formatMinutes(acc.earliestReset)}
-            </div>
-          </div>
-        `;
-
-        container.appendChild(card);
-      });
-
-      // Bind selection buttons
-      container.querySelectorAll('.btn-select').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-          const email = e.currentTarget.getAttribute('data-email');
-          selectAccount(email, e.currentTarget);
-        });
-      });
-
-      const now = new Date();
-      const timeStr = now.toTimeString().split(' ')[0];
-      document.getElementById('footerLastSync').textContent = `Sync: ${timeStr} · 3.5s interval`;
-    }
-
-    function updateMaskButtonUI() {
-      const btnText = document.getElementById('maskBtnText');
-      const btn = document.getElementById('btnMask');
-      if (btnText) btnText.textContent = isMasked ? 'Mask: ON' : 'Mask: OFF';
-      if (btn) {
-        if (isMasked) {
-          btn.style.borderColor = 'var(--success-border)';
-          btn.style.color = '#34d399';
-        } else {
-          btn.style.borderColor = 'var(--border)';
-          btn.style.color = 'var(--fg)';
-        }
+        btn.style.borderColor = 'var(--border)';
+        btn.style.color = 'var(--fg)';
       }
     }
+  }
+  updateMaskButtonUI();
+
+  document.getElementById('btnMask').addEventListener('click', () => {
+    isMasked = !isMasked;
+    localStorage.setItem('agy_privacy_mask', isMasked);
     updateMaskButtonUI();
+    if (lastData) renderDashboard(lastData);
+    showToast(isMasked ? 'Privacy Mask ON (Dummy accounts shown)' : 'Privacy Mask OFF (Real accounts shown)');
+  });
 
-    document.getElementById('btnMask').addEventListener('click', () => {
-      isMasked = !isMasked;
-      localStorage.setItem('agy_privacy_mask', isMasked);
-      updateMaskButtonUI();
-      if (lastData) renderDashboard(lastData);
-      showToast(isMasked ? 'Privacy Mask ON (Dummy accounts shown)' : 'Privacy Mask OFF (Real accounts shown)');
-    });
+  // Tab Filtering (Overview, Fleet, Breakdown)
+  const tabs = [
+    { btn: document.getElementById('tabOverview'), name: 'overview' },
+    { btn: document.getElementById('tabFleet'), name: 'fleet' },
+    { btn: document.getElementById('tabBreakdown'), name: 'breakdown' }
+  ];
 
-    async function loadData() {
-      try {
-        const res = await rpc('accounts.read');
-        const state = (res && res.value !== undefined) ? res.value : res;
-        renderDashboard(state);
-      } catch (err) {
-        document.getElementById('accountsList').innerHTML = `<div class="empty-state" style="color:var(--danger)">Failed to load: ${err.message}</div>`;
-      }
-    }
+  tabs.forEach(t => {
+    t.btn.addEventListener('click', () => {
+      tabs.forEach(o => o.btn.setAttribute('aria-checked', 'false'));
+      t.btn.setAttribute('aria-checked', 'true');
 
-    async function selectAccount(email, buttonEl = null) {
-      if (buttonEl) buttonEl.disabled = true;
-      try {
-        showToast(`Switching to ${email}...`);
-        await rpc('accounts.selectTarget', { target: email });
-        showToast(`Switched to ${email}`);
-        await loadData();
-      } catch (err) {
-        showToast(`Switch error: ${err.message}`, true);
-      } finally {
-        if (buttonEl) buttonEl.disabled = false;
-      }
-    }
+      const kpi = document.getElementById('kpiContainer');
+      const breakdown = document.getElementById('breakdownSection');
+      const mix = document.getElementById('mixSection');
+      const fleet = document.getElementById('fleetSection');
 
-    document.getElementById('btnRefresh').addEventListener('click', (e) => {
-      const btn = e.currentTarget;
-      btn.disabled = true;
-      loadData().finally(() => { setTimeout(() => { btn.disabled = false; }, 350); });
-    });
-
-    document.getElementById('btnRotate').addEventListener('click', async (e) => {
-      const btn = e.currentTarget;
-      btn.disabled = true;
-      const originalText = btn.innerHTML;
-      btn.innerHTML = 'Rotating...';
-      try {
-        showToast('Selecting candidate with lowest quota...');
-        const res = await rpc('accounts.rotateNow');
-        const result = (res && res.value !== undefined) ? res.value : res;
-        if (result && result.success) {
-          showToast(`Switched to ${result.newEmail}`);
-        } else {
-          showToast(`Rotation skipped: ${result?.reason || 'All accounts exhausted'}`, true);
-        }
-        await loadData();
-      } catch (err) {
-        showToast(`Error: ${err.message}`, true);
-      } finally {
-        btn.disabled = false;
-        btn.innerHTML = originalText;
+      if (t.name === 'overview') {
+        kpi.style.display = 'grid';
+        breakdown.style.display = 'block';
+        mix.style.display = 'block';
+        fleet.style.display = 'block';
+      } else if (t.name === 'fleet') {
+        kpi.style.display = 'none';
+        breakdown.style.display = 'none';
+        mix.style.display = 'block';
+        fleet.style.display = 'block';
+      } else if (t.name === 'breakdown') {
+        kpi.style.display = 'grid';
+        breakdown.style.display = 'block';
+        mix.style.display = 'none';
+        fleet.style.display = 'none';
       }
     });
+  });
 
-    // Real-time Event Subscription from Worker
-    function setupRealtimeListener() {
-      const host = window.orca || globalThis.orca;
-      if (host && host.plugin && typeof host.plugin.on === 'function') {
-        host.plugin.on('accounts.changed', (payload) => {
-          const data = (payload && payload.value !== undefined) ? payload.value : payload;
-          renderDashboard(data);
-        });
-      }
+  async function loadData() {
+    try {
+      const res = await rpc('accounts.read');
+      const state = (res && res.value !== undefined) ? res.value : res;
+      renderDashboard(state);
+    } catch (err) {
+      showToast(`Load error: ${err.message}`, true);
     }
+  }
 
-    // Auto-init with retry for frame injection
-    let attempts = 0;
-    function tryInit() {
-      if (window.orca || globalThis.orca || attempts > 10) {
-        setupRealtimeListener();
-        loadData();
+  async function selectAccount(email, buttonEl = null) {
+    if (buttonEl) buttonEl.disabled = true;
+    try {
+      showToast(`Switching to ${email}...`);
+      await rpc('accounts.selectTarget', { target: email });
+      showToast(`Switched to ${email}`);
+      await loadData();
+    } catch (err) {
+      showToast(`Switch error: ${err.message}`, true);
+    } finally {
+      if (buttonEl) buttonEl.disabled = false;
+    }
+  }
+
+  document.getElementById('btnRefresh').addEventListener('click', (e) => {
+    const btn = e.currentTarget;
+    btn.disabled = true;
+    loadData().finally(() => { setTimeout(() => { btn.disabled = false; }, 350); });
+  });
+
+  document.getElementById('btnRotate').addEventListener('click', async (e) => {
+    const btn = e.currentTarget;
+    btn.disabled = true;
+    const orig = btn.innerHTML;
+    btn.innerHTML = 'Rotating...';
+    try {
+      showToast('Finding best candidate with lowest quota...');
+      const res = await rpc('accounts.rotateNow');
+      const result = (res && res.value !== undefined) ? res.value : res;
+      if (result && result.success) {
+        showToast(`Switched to ${result.newEmail}`);
       } else {
-        attempts++;
-        setTimeout(tryInit, 200);
+        showToast(`Rotation skipped: ${result?.reason || 'All accounts exhausted'}`, true);
       }
+      await loadData();
+    } catch (err) {
+      showToast(`Error: ${err.message}`, true);
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = orig;
     }
-    tryInit();
+  });
 
-    // Fast polling fallback (every 3.5s for real-time responsiveness)
-    setInterval(loadData, 3500);
-  </script>
+  // Real-time Event Subscription
+  function setupRealtimeListener() {
+    const host = window.orca || globalThis.orca;
+    if (host && host.plugin && typeof host.plugin.on === 'function') {
+      host.plugin.on('accounts.changed', (payload) => {
+        const data = (payload && payload.value !== undefined) ? payload.value : payload;
+        renderDashboard(data);
+      });
+    }
+  }
+
+  let attempts = 0;
+  function tryInit() {
+    if (window.orca || globalThis.orca || attempts > 10) {
+      setupRealtimeListener();
+      loadData();
+    } else {
+      attempts++;
+      setTimeout(tryInit, 200);
+    }
+  }
+  tryInit();
+
+  // Fast polling fallback
+  setInterval(loadData, 3500);
+</script>
 </body>
 </html>
