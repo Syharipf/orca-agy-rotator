@@ -2,6 +2,7 @@
   "$schema": "https://raw.githubusercontent.com/stablyai/orca/main/docs/schemas/plugins/orca-plugin.v2.schema.json",
   "manifestVersion": 2,
   "id": "antigravity-rotator",
+  "publisher": "syharipf",
   "name": "Antigravity Auto-Switcher",
   "version": "1.0.0",
   "description": "Account rotation and auto-resume for Antigravity on Orca ADE. Switches to lowest-usage account upon rate limits (429 / RESOURCE_EXHAUSTED).",
