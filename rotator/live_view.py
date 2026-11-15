@@ -31,7 +31,8 @@ BG_ACTIVE = "\033[48;5;236m"
 
 
 def format_progress_bar(used_pct: float, width: int = 8) -> str:
-    clamped = min(1.0, max(0.0, used_pct))
+    val = used_pct / 100.0 if used_pct > 1.0 else used_pct
+    clamped = min(1.0, max(0.0, val))
     filled = int(clamped * width)
     unfilled = width - filled
     if clamped >= 1.0:
