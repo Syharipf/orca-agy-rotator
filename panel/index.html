@@ -415,8 +415,14 @@
     }
 
     function formatMinutes(tsMs) {
-      if (!tsMs) return 'N/A';
+      if (!tsMs || isNaN(tsMs)) return '—';
       const m = Math.max(0, Math.floor((tsMs - Date.now()) / 60000));
+      if (m === 0) return 'Reset sekarang';
+      if (m > 60) {
+        const h = Math.floor(m / 60);
+        const remM = m % 60;
+        return `${h}j ${remM}m lagi`;
+      }
       return `${m}m lagi`;
     }
 
@@ -533,8 +539,8 @@
       // Bind selection buttons
       container.querySelectorAll('.btn-select').forEach(btn => {
         btn.addEventListener('click', (e) => {
-          const email = e.target.getAttribute('data-email');
-          selectAccount(email);
+          const email = e.currentTarget.getAttribute('data-email');
+          selectAccount(email, e.currentTarget);
         });
       });
     }
@@ -549,7 +555,8 @@
       }
     }
 
-    async function selectAccount(email) {
+    async function selectAccount(email, buttonEl = null) {
+      if (buttonEl) buttonEl.disabled = true;
       try {
         showToast(`Beralih ke ${email}...`);
         await rpc('accounts.selectTarget', { target: email });
@@ -557,14 +564,22 @@
         await loadData();
       } catch (err) {
         showToast(`Gagal berganti akun: ${err.message}`, true);
+      } finally {
+        if (buttonEl) buttonEl.disabled = false;
       }
     }
 
-    document.getElementById('btnRefresh').addEventListener('click', () => {
-      loadData();
+    document.getElementById('btnRefresh').addEventListener('click', (e) => {
+      const btn = e.currentTarget;
+      btn.disabled = true;
+      loadData().finally(() => { setTimeout(() => { btn.disabled = false; }, 500); });
     });
 
-    document.getElementById('btnRotate').addEventListener('click', async () => {
+    document.getElementById('btnRotate').addEventListener('click', async (e) => {
+      const btn = e.currentTarget;
+      btn.disabled = true;
+      const originalText = btn.innerHTML;
+      btn.innerHTML = 'Memproses...';
       try {
         showToast('Mencari akun terbaik & merotasi...');
         const res = await rpc('accounts.rotateNow');
@@ -577,6 +592,9 @@
         await loadData();
       } catch (err) {
         showToast(`Error rotasi: ${err.message}`, true);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
       }
     });
 
