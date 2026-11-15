@@ -1,7 +1,7 @@
-// Orca ADE Antigravity Auto-Switcher Plugin Worker
-// Handles background quota monitoring, status bar updates, auto-rotation, and panel RPC.
-
 import { execFile } from 'node:child_process';
+import { existsSync } from 'node:fs';
+import { homedir } from 'node:os';
+import { join } from 'node:path';
 import { promisify } from 'node:util';
 
 const execFileAsync = promisify(execFile);
@@ -12,6 +12,21 @@ const DEFAULT_COOLDOWN_MS = 30000;
 
 let lastSwitchTime = 0;
 let isSwitching = false;
+
+function resolveOrcaBinary() {
+  const home = homedir();
+  const candidates = [
+    process.env.ORCA_CLI_COMMAND,
+    join(home, '.config', 'orca', 'linux-orca-cli-shim', 'orca'),
+    '/usr/local/bin/orca',
+    'orca',
+  ].filter(Boolean);
+
+  for (const c of candidates) {
+    if (existsSync(c)) return c;
+  }
+  return 'orca';
+}
 
 function formatEmailShort(email) {
   if (!email) return 'None';
@@ -25,11 +40,18 @@ function formatMinutesLeft(tsMs) {
   return `${diffMinutes}m`;
 }
 
-async function runOrcaCommand(args) {
+async function runOrcaCommand(args, logFn = console.log) {
+  const bin = resolveOrcaBinary();
+  const env = {
+    ...process.env,
+    PATH: `${join(homedir(), '.config', 'orca', 'linux-orca-cli-shim')}:${process.env.PATH || ''}`,
+  };
+
   try {
-    const { stdout } = await execFileAsync('orca', args, { encoding: 'utf8' });
+    const { stdout } = await execFileAsync(bin, args, { encoding: 'utf8', env });
     return JSON.parse(stdout);
   } catch (err) {
+    if (logFn) logFn(`runOrcaCommand error [${bin} ${args.join(' ')}]: ${err.message}`);
     return null;
   }
 }
@@ -38,7 +60,7 @@ export default function activate(orca) {
   orca.log('Antigravity Auto-Switcher: Plugin activated.');
 
   async function fetchAccountsData() {
-    const data = await runOrcaCommand(['account', 'list', '--agent', 'antigravity', '--json']);
+    const data = await runOrcaCommand(['account', 'list', '--agent', 'antigravity', '--json'], (msg) => orca.log(msg));
     if (!data || !data.result) return null;
 
     const result = data.result;

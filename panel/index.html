@@ -23,7 +23,7 @@
       font-family: var(--font);
       background-color: var(--bg);
       color: var(--text);
-      padding: 16px;
+      padding: 14px;
       font-size: 13px;
       line-height: 1.5;
     }
@@ -32,16 +32,16 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 16px;
+      margin-bottom: 14px;
       padding-bottom: 12px;
       border-bottom: 1px solid var(--card-border);
     }
     .title {
-      font-size: 15px;
+      font-size: 14px;
       font-weight: 600;
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
     }
     .btn {
       background: var(--accent);
@@ -72,11 +72,11 @@
       border-radius: 8px;
       padding: 12px;
       margin-bottom: 10px;
-      transition: border-color 0.2s ease;
+      transition: all 0.2s ease;
     }
     .card.active {
       border-color: var(--accent);
-      box-shadow: 0 0 10px rgba(99, 102, 241, 0.15);
+      box-shadow: 0 0 10px rgba(99, 102, 241, 0.2);
     }
     .card-head {
       display: flex;
@@ -133,7 +133,7 @@
     }
 
     .status-alert {
-      padding: 10px;
+      padding: 8px 12px;
       border-radius: 6px;
       margin-bottom: 12px;
       font-size: 12px;
@@ -165,16 +165,26 @@
   <div id="accountsList" class="loading">Memuat daftar akun Orca...</div>
 
   <script>
-    const host = window.orca || globalThis.orca;
-
     async function rpc(name, input) {
-      if (host?.plugin?.request) {
-        return host.plugin.request(name, input, { timeoutMs: 15000 });
+      const host = window.orca || globalThis.orca;
+      if (!host) {
+        throw new Error('Host API Orca belum terhubung.');
       }
-      if (host?.request) {
+
+      if (host.plugin && typeof host.plugin.request === 'function') {
+        const res = await host.plugin.request(name, input, { timeoutMs: 15000 });
+        if (res && typeof res === 'object' && 'ok' in res) {
+          if (!res.ok) throw new Error(res.error?.message || 'RPC Call Failed');
+          return res.value;
+        }
+        return res;
+      }
+
+      if (typeof host.request === 'function') {
         return host.request(name, input);
       }
-      throw new Error('Host API Orca tidak tersedia');
+
+      throw new Error('Host API Orca tidak memiliki method plugin.request.');
     }
 
     function showAlert(msg, isError = false) {
@@ -193,13 +203,22 @@
 
     function renderAccounts(data) {
       const container = document.getElementById('accountsList');
-      if (!data || !data.accounts || !data.accounts.length) {
-        container.innerHTML = '<div class="loading">Tidak ada akun Antigravity yang terdaftar di Orca.</div>';
+      const accounts = (data && data.accounts) || (Array.isArray(data) ? data : []);
+
+      if (!accounts || !accounts.length) {
+        container.innerHTML = `
+          <div class="loading">
+            <p>Tidak ada akun Antigravity yang terdeteksi.</p>
+            <p style="font-size:11px; margin-top:8px; color:var(--text-muted);">
+              Pastikan minimal satu akun Antigravity sudah login di Orca Host.
+            </p>
+          </div>
+        `;
         return;
       }
 
       container.innerHTML = '';
-      data.accounts.forEach(acc => {
+      accounts.forEach(acc => {
         const card = document.createElement('div');
         card.className = 'card' + (acc.isActive ? ' active' : '');
 
@@ -236,20 +255,29 @@
 
           <div class="card-footer">
             <span>Reset: ${formatMinutes(acc.earliestReset)}</span>
-            ${acc.isActive ? '<span>(Sedang Aktif)</span>' : `<button class="btn btn-secondary btn-sm" onclick="selectAccount('${acc.email}')">Pilih Akun</button>`}
+            ${acc.isActive ? '<span>(Sedang Aktif)</span>' : `<button class="btn btn-secondary btn-sm btn-select" data-email="${acc.email}">Pilih Akun</button>`}
           </div>
         `;
 
         container.appendChild(card);
       });
+
+      // Bind select buttons
+      container.querySelectorAll('.btn-select').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const email = e.target.getAttribute('data-email');
+          selectAccount(email);
+        });
+      });
     }
 
     async function loadData() {
       try {
-        const state = await rpc('accounts.read');
+        const res = await rpc('accounts.read');
+        const state = (res && res.value !== undefined) ? res.value : res;
         renderAccounts(state);
       } catch (err) {
-        document.getElementById('accountsList').innerHTML = `<div class="loading">Gagal memuat: ${err.message}</div>`;
+        document.getElementById('accountsList').innerHTML = `<div class="loading" style="color:var(--danger)">Gagal memuat: ${err.message}</div>`;
       }
     }
 
@@ -272,10 +300,11 @@
       try {
         showAlert('Mencari akun terbaik & merotasi...');
         const res = await rpc('accounts.rotateNow');
-        if (res && res.success) {
-          showAlert(`Berhasil beralih ke ${res.newEmail}!`);
+        const result = (res && res.value !== undefined) ? res.value : res;
+        if (result && result.success) {
+          showAlert(`Berhasil beralih ke ${result.newEmail}!`);
         } else {
-          showAlert(`Rotasi ditunda: ${res?.reason || 'Tidak ada akun kosong'}`, true);
+          showAlert(`Rotasi ditunda: ${result?.reason || 'Semua akun limit'}`, true);
         }
         await loadData();
       } catch (err) {
@@ -283,9 +312,17 @@
       }
     });
 
-    // Initial load
-    loadData();
-    setInterval(loadData, 10000);
+    // Auto-init with retry in case window.orca is injected slightly later
+    let attempts = 0;
+    function tryInit() {
+      if (window.orca || globalThis.orca || attempts > 10) {
+        loadData();
+      } else {
+        attempts++;
+        setTimeout(tryInit, 200);
+      }
+    }
+    tryInit();
   </script>
 </body>
 </html>
