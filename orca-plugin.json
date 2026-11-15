@@ -1,0 +1,105 @@
+{
+  "$schema": "https://raw.githubusercontent.com/stablyai/orca/main/docs/schemas/plugins/orca-plugin.v2.schema.json",
+  "manifestVersion": 2,
+  "id": "antigravity-rotator",
+  "name": "Antigravity Auto-Switcher",
+  "version": "1.0.0",
+  "description": "Smart account rotation and auto-resume for Antigravity (agy) on Orca ADE. Automatically switches to unused accounts upon hitting rate limits (429 / RESOURCE_EXHAUSTED).",
+  "license": "MIT",
+  "author": {
+    "name": "syharipf"
+  },
+  "repository": "https://github.com/syharipf/orca-antigravity-rotator",
+  "icon": "images/icon.png",
+  "cover": {
+    "path": "images/cover.png",
+    "alt": "Antigravity Auto-Switcher dashboard and rotation monitor in Orca ADE"
+  },
+  "engines": {
+    "orca": ">=1.4.248"
+  },
+  "execution": "trusted-worker",
+  "pluginApi": 1,
+  "main": "src/worker.mjs",
+  "contributes": {
+    "panels": [
+      {
+        "id": "antigravity-switcher",
+        "title": "Antigravity Switcher",
+        "icon": "refresh",
+        "entry": "panel/index.html"
+      }
+    ],
+    "commands": [
+      {
+        "id": "toggle-panel",
+        "title": "Antigravity: Show Switcher Panel",
+        "action": "sidebar.right.toggle"
+      },
+      {
+        "id": "rotate-now",
+        "title": "Antigravity: Rotate Account Now"
+      }
+    ],
+    "statusBarItems": [
+      {
+        "id": "agy-status",
+        "text": "Antigravity: Checking...",
+        "icon": "refresh",
+        "tooltip": "Antigravity Auto-Switcher",
+        "command": "toggle-panel"
+      }
+    ],
+    "events": [
+      {
+        "on": "agent.status.changed"
+      },
+      {
+        "on": "workspace.changed"
+      }
+    ],
+    "settings": [
+      {
+        "key": "autoResume",
+        "title": "Auto-resume terminal after rotation",
+        "type": "boolean",
+        "default": true
+      },
+      {
+        "key": "resumeCommand",
+        "title": "Resume trigger text",
+        "type": "string",
+        "default": "lanjutkan pengerjaan tadi"
+      },
+      {
+        "key": "cooldownSeconds",
+        "title": "Cooldown between rotations (seconds)",
+        "type": "integer",
+        "default": 30
+      }
+    ]
+  },
+  "capabilities": [
+    {
+      "kind": "terminal:send"
+    },
+    {
+      "kind": "terminal:read"
+    },
+    {
+      "kind": "agent:read"
+    },
+    {
+      "kind": "workspace:read"
+    },
+    {
+      "kind": "notifications:show"
+    },
+    {
+      "kind": "settings:own"
+    },
+    {
+      "kind": "storage:own"
+    }
+  ]
+}

@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Antigravity Auto-Switcher</title>
+  <style>
+    :root {
+      --bg: #13151f;
+      --card-bg: #1c1f2e;
+      --card-border: #2d3348;
+      --text: #e2e8f0;
+      --text-muted: #94a3b8;
+      --accent: #6366f1;
+      --accent-hover: #4f46e5;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font);
+      background-color: var(--bg);
+      color: var(--text);
+      padding: 16px;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--card-border);
+    }
+    .title {
+      font-size: 15px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 500;
+      transition: background 0.15s ease;
+    }
+    .btn:hover { background: var(--accent-hover); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-secondary {
+      background: var(--card-border);
+      color: var(--text);
+    }
+    .btn-secondary:hover { background: #3b425b; }
+    .btn-sm {
+      padding: 3px 8px;
+      font-size: 11px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 10px;
+      transition: border-color 0.2s ease;
+    }
+    .card.active {
+      border-color: var(--accent);
+      box-shadow: 0 0 10px rgba(99, 102, 241, 0.15);
+    }
+    .card-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .email {
+      font-weight: 600;
+      font-size: 13px;
+      word-break: break-all;
+    }
+    .badge {
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+    .badge-active { background: rgba(99, 102, 241, 0.2); color: #818cf8; border: 1px solid #6366f1; }
+    .badge-ready { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid #10b981; }
+    .badge-limit { background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid #ef4444; }
+
+    .quota-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 6px;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+    .progress-bar-bg {
+      flex: 1;
+      height: 6px;
+      background: #111420;
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.3s ease;
+    }
+
+    .card-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 10px;
+      padding-top: 8px;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .status-alert {
+      padding: 10px;
+      border-radius: 6px;
+      margin-bottom: 12px;
+      font-size: 12px;
+      display: none;
+    }
+    .status-alert.info { background: rgba(99, 102, 241, 0.15); color: #c7d2fe; display: block; }
+    .status-alert.error { background: rgba(239, 68, 68, 0.15); color: #fca5a5; display: block; }
+
+    .loading {
+      text-align: center;
+      padding: 24px;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <div class="title">
+      <span>🔄 Antigravity Auto-Switcher</span>
+    </div>
+    <div style="display: flex; gap: 6px;">
+      <button id="btnRefresh" class="btn btn-secondary">Refresh</button>
+      <button id="btnRotate" class="btn">Rotate Best</button>
+    </div>
+  </div>
+
+  <div id="statusAlert" class="status-alert"></div>
+  <div id="accountsList" class="loading">Memuat daftar akun Orca...</div>
+
+  <script>
+    const host = window.orca || globalThis.orca;
+
+    async function rpc(name, input) {
+      if (host?.plugin?.request) {
+        return host.plugin.request(name, input, { timeoutMs: 15000 });
+      }
+      if (host?.request) {
+        return host.request(name, input);
+      }
+      throw new Error('Host API Orca tidak tersedia');
+    }
+
+    function showAlert(msg, isError = false) {
+      const el = document.getElementById('statusAlert');
+      el.textContent = msg;
+      el.className = 'status-alert ' + (isError ? 'error' : 'info');
+      el.style.display = 'block';
+      setTimeout(() => { el.style.display = 'none'; }, 5000);
+    }
+
+    function formatMinutes(tsMs) {
+      if (!tsMs) return 'N/A';
+      const m = Math.max(0, Math.floor((tsMs - Date.now()) / 60000));
+      return `${m}m lagi`;
+    }
+
+    function renderAccounts(data) {
+      const container = document.getElementById('accountsList');
+      if (!data || !data.accounts || !data.accounts.length) {
+        container.innerHTML = '<div class="loading">Tidak ada akun Antigravity yang terdaftar di Orca.</div>';
+        return;
+      }
+
+      container.innerHTML = '';
+      data.accounts.forEach(acc => {
+        const card = document.createElement('div');
+        card.className = 'card' + (acc.isActive ? ' active' : '');
+
+        const badgeClass = acc.isActive ? 'badge-active' : (acc.isExhausted ? 'badge-limit' : 'badge-ready');
+        const badgeText = acc.isActive ? 'Active' : (acc.isExhausted ? 'Exhausted' : 'Ready');
+
+        const sessionPct = Math.round((acc.sessionUsed || 0) * 100);
+        const weeklyPct = Math.round((acc.weeklyUsed || 0) * 100);
+
+        const sessionColor = sessionPct >= 100 ? 'var(--danger)' : (sessionPct >= 80 ? 'var(--warning)' : 'var(--success)');
+        const weeklyColor = weeklyPct >= 100 ? 'var(--danger)' : (weeklyPct >= 80 ? 'var(--warning)' : 'var(--success)');
+
+        card.innerHTML = `
+          <div class="card-head">
+            <span class="email">${acc.email}</span>
+            <span class="badge ${badgeClass}">${badgeText}</span>
+          </div>
+
+          <div class="quota-row">
+            <span style="width: 50px;">Session:</span>
+            <div class="progress-bar-bg">
+              <div class="progress-bar-fill" style="width: ${Math.min(100, sessionPct)}%; background: ${sessionColor};"></div>
+            </div>
+            <span style="width: 35px; text-align: right;">${sessionPct}%</span>
+          </div>
+
+          <div class="quota-row">
+            <span style="width: 50px;">Weekly:</span>
+            <div class="progress-bar-bg">
+              <div class="progress-bar-fill" style="width: ${Math.min(100, weeklyPct)}%; background: ${weeklyColor};"></div>
+            </div>
+            <span style="width: 35px; text-align: right;">${weeklyPct}%</span>
+          </div>
+
+          <div class="card-footer">
+            <span>Reset: ${formatMinutes(acc.earliestReset)}</span>
+            ${acc.isActive ? '<span>(Sedang Aktif)</span>' : `<button class="btn btn-secondary btn-sm" onclick="selectAccount('${acc.email}')">Pilih Akun</button>`}
+          </div>
+        `;
+
+        container.appendChild(card);
+      });
+    }
+
+    async function loadData() {
+      try {
+        const state = await rpc('accounts.read');
+        renderAccounts(state);
+      } catch (err) {
+        document.getElementById('accountsList').innerHTML = `<div class="loading">Gagal memuat: ${err.message}</div>`;
+      }
+    }
+
+    async function selectAccount(email) {
+      try {
+        showAlert(`Beralih ke ${email}...`);
+        await rpc('accounts.selectTarget', { target: email });
+        showAlert(`Berhasil berganti ke ${email}!`);
+        await loadData();
+      } catch (err) {
+        showAlert(`Gagal berganti akun: ${err.message}`, true);
+      }
+    }
+
+    document.getElementById('btnRefresh').addEventListener('click', () => {
+      loadData();
+    });
+
+    document.getElementById('btnRotate').addEventListener('click', async () => {
+      try {
+        showAlert('Mencari akun terbaik & merotasi...');
+        const res = await rpc('accounts.rotateNow');
+        if (res && res.success) {
+          showAlert(`Berhasil beralih ke ${res.newEmail}!`);
+        } else {
+          showAlert(`Rotasi ditunda: ${res?.reason || 'Tidak ada akun kosong'}`, true);
+        }
+        await loadData();
+      } catch (err) {
+        showAlert(`Error rotasi: ${err.message}`, true);
+      }
+    });
+
+    // Initial load
+    loadData();
+    setInterval(loadData, 10000);
+  </script>
+</body>
+</html>
