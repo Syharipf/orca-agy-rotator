@@ -1,5 +1,12 @@
 # Orca ADE Antigravity Auto-Switcher
 
+> [!CAUTION]
+> **DISCLAIMER & TERMS NOTICE**
+> - **No Request Proxying & No Credential Storage:** This tool does not proxy requests or redirect network traffic, nor does it store, intercept, or manage user credentials. It only invokes the local `orca` CLI and reads local system status and log files.
+> - **Terms of Service Compliance:** Automated account switching to circumvent quota limits may violate service provider Terms of Service (including Google Antigravity Additional Terms). This tool does not guarantee immunity from policy enforcement, quota restrictions, or account actions.
+> - **Intended Usage:** Use solely with your own legitimately acquired paid accounts. All usage is at your own risk.
+> - **Non-Affiliation:** This project is an independent community utility and is not affiliated with, endorsed by, or sponsored by Google or Orca.
+
 Background failover daemon and native Orca ADE v2 plugin for automated account rotation and session continuation on the Antigravity (`antigravity`) agent runtime.
 
 ---
@@ -49,9 +56,9 @@ This project implements an automated, event-driven supervisor that handles rate-
 ```
 
 ### Operational Workflow
-1. **Detection:**
-   - **Reactive:** Non-blocking scanner monitors Orca trace logs (`~/.config/orca/logs/main.trace.ndjson`, `daemon.log`, ACP brain transcripts) for `RESOURCE_EXHAUSTED`, `HTTP 429`, and related quota rejection patterns.
-   - **Proactive:** Background polling queries `orca account list --agent antigravity --json`. If the currently selected account reaches 100% session quota, failover triggers preemptively before turn failure.
+1. **Detection (Daemon vs Plugin Differences):**
+   - **Python Daemon:** Combines reactive and proactive scanning. Continuously monitors host log streams (`~/.config/orca/logs/main.trace.ndjson`, `daemon.log`, ACP brain transcripts) for `RESOURCE_EXHAUSTED`, `HTTP 429 Too Many Requests`, and quota limit patterns, in addition to background polling.
+   - **Orca Plugin (`src/worker.mjs`):** Operates within Orca's extension sandbox without raw log file access. It detects quota exhaustion strictly via periodic polling of `orca account list --agent antigravity --json` and runtime event subscriptions (`agent.status.changed`, `agent.activity.changed`).
 2. **Account Selection:**
    - Accounts are ranked by available quota using Orca's native integer scale (`usedPercent: 0-100`).
    - Prioritizes accounts with `usedPercent == 0` for both session and weekly windows.
@@ -76,12 +83,15 @@ The repository provides two deployment targets that can run independently or in 
 ### 1. Linux Systemd User Daemon (`rotator/`)
 - Pure Python 3.10+ service utilizing standard library modules (zero external dependencies).
 - Runs under `systemd --user` as a persistent background supervisor.
+- Real-time NDJSON log streaming and brain transcript regex scanner detecting `RESOURCE_EXHAUSTED` / `HTTP 429` errors.
 - Provides interactive terminal monitoring (`main.py live`) and CLI operational controls.
 
 ### 2. Native Orca ADE Plugin v2 (`orca-plugin.json`)
 - Conforms to Orca ADE Plugin Manifest v2 schema (`execution: "trusted-worker"`).
-- Background worker (`src/worker.mjs`) monitoring quota and workspace status events.
+- Background worker (`src/worker.mjs`) monitoring quota and workspace status via polling (`orca account list`) and ADE runtime events (`agent.status.changed`).
+- Native sliding-window circuit breaker (5 switches in 180s) and cooldown protections.
 - Sidebar UI panel (`panel/index.html`) using native Orca design tokens (`var(--orca-*)`).
+- Token telemetry with rough cost estimation (configurable assumptions) and cached stream parsing.
 - Status bar item displaying real-time active account quota.
 - Built-in Privacy Mask toggle to sanitize account identifiers for screencasts.
 
@@ -172,14 +182,11 @@ Commands:
 ===============================================================================================
  STATUS         | EMAIL [PRIVACY MASK: ON]           | SESSION    | WEEKLY     | RESET TIME
 ===============================================================================================
- ▶ ● IN USE     | dev-lead@example.com               | 0%         | 0%         | 23:09:59 (109m)
-   ○ READY      | worker-alpha@example.com           | 27%        | 9%         | 23:25:32 (124m)
-   ○ READY      | runner-beta@example.com            | 1%         | 1%         | 23:43:11 (142m)
-   ○ READY      | agent-gamma@example.com            | 1%         | 1%         | 23:50:54 (150m)
-   ○ READY      | backup-ops@example.com             | 1%         | 1%         | 23:52:13 (151m)
-   ○ READY      | standby-pool@example.com           | 0%         | 0%         | 01:47:25 (266m)
+ ▶ ● IN USE     | dev-lead@example.com               | 12%        | 4%         | 23:09:59 (109m)
+  ╰─ Target sesi: Terminal 1 · main.py (Akun aktif untuk sesi ini)
+   ○ READY      | worker-alpha@example.com           | 0%         | 0%         | 23:25:32 (124m)
 ===============================================================================================
-[Hotkeys] (r) Rotate Best  |  (m) Toggle Mask  |  (1-6) Direct Switch  |  (q) Exit
+[Hotkeys] (r) Rotate Best  |  (m) Toggle Mask  |  (1-2) Direct Switch  |  (q) Exit
 ```
 
 ---
@@ -233,19 +240,20 @@ python3 test_rotator.py
 
 Test output:
 ```text
-Ran 7 tests in 0.003s
+Ran 8 tests in 0.006s
 
 OK
 ```
 
 ### Test Coverage
-- `test_select_best_account_smart_quota`: Validates 0% usage selection over partially consumed accounts.
-- `test_select_best_all_exhausted`: Verifies correct fallback calculation and earliest reset timestamp resolution.
-- `test_select_best_account_round_robin`: Validates sequential cycling when round-robin strategy is selected.
+- `test_quota_percentage_scale_is_already_percent`: Asserts that session and weekly quotas are treated natively as 0-100% values without redundant multiplication.
+- `test_smart_quota_candidate_selection`: Validates 0% usage selection over partially consumed accounts.
+- `test_all_accounts_exhausted_scenario`: Verifies correct fallback calculation and earliest reset timestamp resolution.
+- `test_round_robin_selection`: Validates sequential cycling when round-robin strategy is selected.
 - `test_cooldown_enforcement`: Asserts that rotation requests within the cooldown window are rejected.
 - `test_circuit_breaker_trip`: Asserts that exceeding switch velocity trips the breaker and locks rotation.
-- `test_detect_limit_patterns`: Verifies regex pattern detection across simulated NDJSON log streams.
-- `test_terminal_priority`: Asserts that writable Antigravity sessions take priority over generic terminals.
+- `test_rate_limit_detection`: Verifies regex pattern detection across simulated log streams.
+- `test_terminal_selection_priority`: Asserts that writable Antigravity sessions take priority over generic terminals.
 
 ---
 
@@ -253,6 +261,7 @@ OK
 
 - **Keyring Delegation:** Credentials are never cached, logged, or managed directly by this tool. Account switching relies exclusively on the `orca account select` CLI invocation delegating to system keyring stores.
 - **Privacy Masking:** The `--mask` CLI flag and UI toggle replace real email addresses with deterministic dummy identifiers, ensuring safety during video capture and public demonstrations.
+- **Privacy & Local Telemetry:** Token telemetry calculations strictly read local `transcript.jsonl` files on the host machine. Only token count metrics are parsed to aggregate session usage; user prompts, thoughts, transcripts, and source code are never uploaded, captured, or transmitted.
 - **Unprivileged Execution:** Operates entirely within standard user permissions (`systemd --user`). Root privileges are not required.
 
 ---

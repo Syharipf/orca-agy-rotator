@@ -9,13 +9,18 @@
   "resume_delay_seconds": 2.0,
   "resume_command": "lanjutkan pengerjaan tadi",
   "target_terminal": null,
+  "pricing": {
+    "input_per_million": 1.25,
+    "output_per_million": 5.0,
+    "cache_read_per_million": 0.3
+  },
   "notifications_enabled": true,
   "notification_app_name": "Orca ADE Rotator",
   "log_files": [
     "~/.config/orca/logs/main.trace.ndjson",
     "~/.config/orca/logs/daemon.log"
   ],
-  "monitor_brain_transcripts": true,
+  "monitor_brain_transcripts": false,
   "brain_dir": "~/.config/orca/antigravity-chat/antigravity-acp/brain",
   "rate_limit_patterns": [
     "RESOURCE_EXHAUSTED",

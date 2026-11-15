@@ -1,5 +1,6 @@
 """Unit and integration tests for Orca ADE Antigravity Auto-Switcher."""
 
+import json
 import unittest
 from unittest.mock import patch, MagicMock
 import tempfile
@@ -16,6 +17,33 @@ from rotator.terminal_manager import TerminalManager, TerminalInfo
 class TestAccountManager(unittest.TestCase):
     def setUp(self):
         self.mgr = AccountManager()
+
+    def test_quota_percentage_scale_is_already_percent(self):
+        raw_json = json.dumps({
+            "result": {
+                "activeAccountId": "acc-1",
+                "accounts": [
+                    {
+                        "id": "acc-1",
+                        "email": "user@example.com",
+                        "usage": {
+                            "session": {"usedPercent": 25.0},
+                            "weekly": {"usedPercent": 50.0},
+                        }
+                    }
+                ]
+            }
+        })
+        with patch("subprocess.run") as mock_run:
+            mock_run.return_value = MagicMock(stdout=raw_json)
+            accounts, active_id, active_account = self.mgr.fetch_accounts()
+            self.assertEqual(len(accounts), 1)
+            acc = accounts[0]
+            # Must remain 25.0 (0-100 scale, not multiplied by 100)
+            self.assertEqual(acc.session_used, 25.0)
+            self.assertEqual(acc.weekly_used, 50.0)
+            self.assertEqual(f"{int(acc.session_used)}%", "25%")
+            self.assertEqual(f"{int(acc.weekly_used)}%", "50%")
 
     def test_smart_quota_candidate_selection(self):
         # 3 accounts:

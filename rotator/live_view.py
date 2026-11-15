@@ -1,4 +1,4 @@
-"""Interactive Live TUI Monitor inspired by 9Router gateway styling."""
+"""Interactive Live TUI Monitor for Orca Antigravity accounts."""
 
 import datetime
 import os
@@ -147,7 +147,7 @@ def run_live_monitor(config: RotatorConfig, mask: bool = False):
                 out.append(row)
 
                 if is_active:
-                    routing_line = f"      {GRAY}╰─{RESET} {GREEN}Routing aktif:{RESET} {BOLD}{session_title[:50]}{RESET}"
+                    routing_line = f"      {GRAY}╰─{RESET} {GREEN}Target sesi:{RESET} {BOLD}{session_title[:50]}{RESET}"
                     out.append(routing_line)
 
             out.append(f"  {GRAY}{'─' * 98}{RESET}")

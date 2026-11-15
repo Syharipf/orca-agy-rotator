@@ -30,6 +30,13 @@ class RotatorConfig:
     resume_command: str = "lanjutkan pengerjaan tadi"
     target_terminal: Optional[str] = None  # None = auto-detect most active
     
+    # Pricing assumption rates per million tokens
+    pricing: dict = field(default_factory=lambda: {
+        "input_per_million": 1.25,
+        "output_per_million": 5.0,
+        "cache_read_per_million": 0.3,
+    })
+
     # Notifications
     notifications_enabled: bool = True
     notification_app_name: str = "Orca ADE Rotator"
@@ -41,7 +48,7 @@ class RotatorConfig:
     ])
     
     # Dynamic brain/transcripts monitoring
-    monitor_brain_transcripts: bool = True
+    monitor_brain_transcripts: bool = False
     brain_dir: str = "~/.config/orca/antigravity-chat/antigravity-acp/brain"
     
     # Rate limit error patterns (case-insensitive regex)

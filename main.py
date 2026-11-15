@@ -91,8 +91,8 @@ def cmd_status(args, config: RotatorConfig):
     print("-" * 60)
     if active_account:
         print(f"Akun Aktif       : {active_account.email} (ID: {active_account.id})")
-        print(f"Session Quota    : {int(active_account.session_used * 100)}% digunakan")
-        print(f"Weekly Quota     : {int(active_account.weekly_used * 100)}% digunakan")
+        print(f"Session Quota    : {int(active_account.session_used)}% digunakan")
+        print(f"Weekly Quota     : {int(active_account.weekly_used)}% digunakan")
         print(f"Status Kuota     : {'HABIS / LIMIT' if active_account.is_exhausted else 'TERSEDIA'}")
         if active_account.earliest_reset_timestamp:
             print(f"Reset Terdekat   : {format_ms_timestamp(active_account.earliest_reset_timestamp)}")
@@ -153,7 +153,7 @@ def cmd_accounts(args, config: RotatorConfig):
         is_active = (acc.id == active_id)
         email_str = dummy_pool[idx % len(dummy_pool)] if is_masked else acc.email
 
-        # Quota tag with 9Router-style in-use indicator
+        # Quota tag with in-use indicator
         if is_active:
             quota_tag = "\033[1;32m● IN USE\033[0m"
             prefix = "\033[1;32m▶\033[0m"
@@ -175,7 +175,7 @@ def cmd_accounts(args, config: RotatorConfig):
         col_email = pad_ansi(email_display, 34)
         print(f" {col_status} | {col_email} | {session_pct:<10} | {weekly_pct:<10} | {reset_str}")
         if is_active:
-            print(f"  \033[90m╰─\033[0m \033[32mRouting aktif ke:\033[0m \033[1m{session_title}\033[0m (Traffic AI diarahkan ke akun ini)")
+            print(f"  \033[90m╰─\033[0m \033[32mTarget sesi:\033[0m \033[1m{session_title}\033[0m (Akun aktif untuk sesi ini)")
 
     print("=" * 95)
     print("💡 \033[1mMode Live:\033[0m Jalankan '\033[36m./main.py live\033[0m' (tekan 'm' untuk toggle mask). Flag '\033[36m--mask\033[0m' untuk menyembunyikan akun asli.")
@@ -344,11 +344,11 @@ def main():
 
     # accounts command
     p_accounts = subparsers.add_parser("accounts", parents=[base_parser], help="Tampilkan daftar seluruh akun Antigravity dan kuotanya")
-    p_accounts.add_argument("--live", "-l", action="store_true", help="Buka monitor real-time interaktif (tampilan 9Router)")
+    p_accounts.add_argument("--live", "-l", action="store_true", help="Buka monitor real-time interaktif")
     p_accounts.add_argument("--mask", "-m", action="store_true", help="Sembunyikan akun asli dengan email dummy (mode presentasi/screenshot)")
 
-    # live / watch command (9Router-style live interactive TUI)
-    p_live = subparsers.add_parser("live", parents=[base_parser], help="Buka live interactive monitor real-time seperti 9Router")
+    # live / watch command (live interactive TUI)
+    p_live = subparsers.add_parser("live", parents=[base_parser], help="Buka live interactive monitor real-time")
     p_live.add_argument("--mask", "-m", action="store_true", help="Sembunyikan akun asli dengan email dummy (mode presentasi/screenshot)")
     p_watch = subparsers.add_parser("watch", parents=[base_parser], help="Alias untuk perintah live")
     p_watch.add_argument("--mask", "-m", action="store_true", help="Sembunyikan akun asli dengan email dummy (mode presentasi/screenshot)")

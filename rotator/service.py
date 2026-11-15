@@ -169,7 +169,7 @@ class RotatorDaemon:
                         if cur_active and cur_active.is_exhausted:
                             trigger_msg = (
                                 f"Kuota akun aktif {cur_active.email} habis "
-                                f"(Session: {int(cur_active.session_used * 100)}%, Weekly: {int(cur_active.weekly_used * 100)}%)"
+                                f"(Session: {int(cur_active.session_used)}%, Weekly: {int(cur_active.weekly_used)}%)"
                             )
                             self.trigger_rotation(trigger_reason=trigger_msg)
                     except Exception as e:

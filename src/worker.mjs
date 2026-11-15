@@ -2,19 +2,46 @@
 // Handles real-time quota monitoring, model detection, status bar updates, and panel RPC.
 
 import { execFile } from 'node:child_process';
-import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { createReadStream, existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
+import { createInterface } from 'node:readline';
+import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 
 const execFileAsync = promisify(execFile);
 
+function loadPluginConfig() {
+  try {
+    const cfgPath = join(fileURLToPath(new URL('..', import.meta.url)), 'config.json');
+    if (existsSync(cfgPath)) {
+      return JSON.parse(readFileSync(cfgPath, 'utf8'));
+    }
+  } catch {}
+  return {};
+}
+
+const pluginConfig = loadPluginConfig();
+
 const POLL_INTERVAL_MS = 3500;
-const SETTLE_DELAY_MS = 2000;
-const DEFAULT_COOLDOWN_MS = 30000;
+const SETTLE_DELAY_MS = (pluginConfig.resume_delay_seconds ?? 2.0) * 1000;
+const DEFAULT_COOLDOWN_MS = (pluginConfig.cooldown_seconds ?? 30.0) * 1000;
+const CIRCUIT_BREAKER_MAX = pluginConfig.circuit_breaker_max_switches ?? 5;
+const CIRCUIT_BREAKER_WINDOW_MS = (pluginConfig.circuit_breaker_window_seconds ?? 180.0) * 1000;
+const TARGET_TERMINAL_CONFIG = pluginConfig.target_terminal ?? null;
+const RESUME_COMMAND = pluginConfig.resume_command || 'lanjutkan pengerjaan tadi';
+
+const DEFAULT_PRICING = {
+  input: (pluginConfig.pricing && pluginConfig.pricing.input_per_million) ?? 1.25,
+  output: (pluginConfig.pricing && pluginConfig.pricing.output_per_million) ?? 5.00,
+  cache: (pluginConfig.pricing && pluginConfig.pricing.cache_read_per_million) ?? 0.30,
+};
 
 let lastSwitchTime = 0;
 let isSwitching = false;
+let switchHistory = [];
+let isCircuitBreakerTripped = false;
+let circuitBreakerTrippedAt = 0;
 
 function resolveOrcaBinary() {
   const home = homedir();
@@ -114,7 +141,42 @@ export default function activate(orca) {
     };
   }
 
-  function computeTokenTelemetry() {
+  const transcriptCache = new Map();
+
+  async function getTranscriptRecords(tFile, st) {
+    const cached = transcriptCache.get(tFile);
+    if (cached && cached.mtimeMs === st.mtimeMs && cached.size === st.size) {
+      return cached.records;
+    }
+
+    const records = [];
+    const rl = createInterface({
+      input: createReadStream(tFile, { encoding: 'utf8' }),
+      crlfDelay: Infinity,
+    });
+
+    for await (const line of rl) {
+      if (!line.includes('input_tokens')) continue;
+      try {
+        const d = JSON.parse(line);
+        const inp = d.input_tokens || 0;
+        const out = d.output_tokens || 0;
+        const cch = d.cache_read_tokens || 0;
+        const tot = inp + out + cch;
+        if (!tot && !d.created_at) continue;
+
+        const ts = d.created_at ? new Date(d.created_at).getTime() : Date.now();
+        const dateStr = d.created_at ? d.created_at.slice(0, 10) : 'Today';
+        const hourStr = (d.created_at ? d.created_at.slice(11, 13) : '12') + ':00';
+        records.push({ ts, dateStr, hourStr, tot, inp, out, cch });
+      } catch (e) {}
+    }
+
+    transcriptCache.set(tFile, { mtimeMs: st.mtimeMs, size: st.size, records });
+    return records;
+  }
+
+  async function computeTokenTelemetry() {
     const brainDir = join(homedir(), '.config', 'orca', 'antigravity-chat', 'antigravity-acp', 'brain');
     if (!existsSync(brainDir)) return null;
 
@@ -143,56 +205,44 @@ export default function activate(orca) {
         const tFile = join(brainDir, c, '.system_generated', 'logs', 'transcript.jsonl');
         if (!existsSync(tFile)) continue;
         try {
-          const content = readFileSync(tFile, 'utf8');
-          const lines = content.split('\n');
-          for (const line of lines) {
-            if (!line.includes('input_tokens')) continue;
-            try {
-              const d = JSON.parse(line);
-              const inp = d.input_tokens || 0;
-              const out = d.output_tokens || 0;
-              const cch = d.cache_read_tokens || 0;
-              const tot = inp + out + cch;
-              if (!tot && !d.created_at) continue;
+          const st = statSync(tFile);
+          const records = await getTranscriptRecords(tFile, st);
+          for (const r of records) {
+            const { ts, dateStr, hourStr, tot, inp, out, cch } = r;
 
-              const ts = d.created_at ? new Date(d.created_at).getTime() : now;
-              const dateStr = d.created_at ? d.created_at.slice(0, 10) : 'Today';
+            if (!dailyMap[dateStr]) dailyMap[dateStr] = { date: dateStr, total: 0, input: 0, output: 0, cache: 0, turns: 0 };
+            dailyMap[dateStr].total += tot;
+            dailyMap[dateStr].input += inp;
+            dailyMap[dateStr].output += out;
+            dailyMap[dateStr].cache += cch;
+            dailyMap[dateStr].turns += 1;
 
-              if (!dailyMap[dateStr]) dailyMap[dateStr] = { date: dateStr, total: 0, input: 0, output: 0, cache: 0, turns: 0 };
-              dailyMap[dateStr].total += tot;
-              dailyMap[dateStr].input += inp;
-              dailyMap[dateStr].output += out;
-              dailyMap[dateStr].cache += cch;
-              dailyMap[dateStr].turns += 1;
+            if (ts >= cutoffs.today) {
+              if (!hourlyTodayMap[hourStr]) hourlyTodayMap[hourStr] = { label: hourStr, total: 0, input: 0, output: 0, cache: 0, turns: 0 };
+              hourlyTodayMap[hourStr].total += tot;
+              hourlyTodayMap[hourStr].input += inp;
+              hourlyTodayMap[hourStr].output += out;
+              hourlyTodayMap[hourStr].cache += cch;
+              hourlyTodayMap[hourStr].turns += 1;
+            }
 
-              if (ts >= cutoffs.today) {
-                const hourStr = (d.created_at ? d.created_at.slice(11, 13) : '12') + ':00';
-                if (!hourlyTodayMap[hourStr]) hourlyTodayMap[hourStr] = { label: hourStr, total: 0, input: 0, output: 0, cache: 0, turns: 0 };
-                hourlyTodayMap[hourStr].total += tot;
-                hourlyTodayMap[hourStr].input += inp;
-                hourlyTodayMap[hourStr].output += out;
-                hourlyTodayMap[hourStr].cache += cch;
-                hourlyTodayMap[hourStr].turns += 1;
+            for (const [key, cutoff] of Object.entries(cutoffs)) {
+              if (ts >= cutoff) {
+                stats[key].total += tot;
+                stats[key].input += inp;
+                stats[key].output += out;
+                stats[key].cache += cch;
+                stats[key].turns += 1;
               }
-
-              for (const [key, cutoff] of Object.entries(cutoffs)) {
-                if (ts >= cutoff) {
-                  stats[key].total += tot;
-                  stats[key].input += inp;
-                  stats[key].output += out;
-                  stats[key].cache += cch;
-                  stats[key].turns += 1;
-                }
-              }
-            } catch (e) {}
+            }
           }
         } catch (e) {}
       }
 
       for (const s of Object.values(stats)) {
         s.hitRate = s.total > 0 ? (s.cache / s.total) * 100 : 0;
-        s.cost = (s.input * 1.25 + s.output * 5.00 + s.cache * 0.30) / 1_000_000;
-        s.savings = (s.cache * (1.25 - 0.30)) / 1_000_000;
+        s.cost = (s.input * DEFAULT_PRICING.input + s.output * DEFAULT_PRICING.output + s.cache * DEFAULT_PRICING.cache) / 1_000_000;
+        s.savings = (s.cache * (DEFAULT_PRICING.input - DEFAULT_PRICING.cache)) / 1_000_000;
       }
 
       return {
@@ -245,7 +295,7 @@ export default function activate(orca) {
     const healthPercent = totalAccounts > 0 ? Math.round((availableAccounts / totalAccounts) * 100) : 0;
 
     const activeSession = await detectActiveSession();
-    const telemetry = computeTokenTelemetry();
+    const telemetry = await computeTokenTelemetry();
 
     return {
       accounts,
@@ -272,12 +322,20 @@ export default function activate(orca) {
         isMasked = parsed.masked;
       }
     }
-  } catch {}
+  } catch (err) {
+    orca.log(`Error reading mask state from ${maskFile}: ${err.message}`);
+  }
 
   function saveMaskState(val) {
     try {
+      const dir = dirname(maskFile);
+      if (!existsSync(dir)) {
+        mkdirSync(dir, { recursive: true });
+      }
       writeFileSync(maskFile, JSON.stringify({ masked: val }), 'utf8');
-    } catch {}
+    } catch (err) {
+      orca.log(`saveMaskState failed for ${maskFile}: ${err.message}`);
+    }
   }
 
   async function updateStatusBar(activeAccount, modelName = 'Gemini') {
@@ -312,6 +370,22 @@ export default function activate(orca) {
   async function rotateToBestAccount(reason = 'Rate limit terdeteksi') {
     const now = Date.now();
     if (isSwitching) return { success: false, reason: 'Pergantian akun sedang berlangsung' };
+
+    // 1. Check sliding-window circuit breaker
+    if (isCircuitBreakerTripped) {
+      const remainingCooldown = CIRCUIT_BREAKER_WINDOW_MS - (now - circuitBreakerTrippedAt);
+      if (remainingCooldown > 0) {
+        const remainingSec = Math.ceil(remainingCooldown / 1000);
+        return {
+          success: false,
+          reason: `Circuit breaker aktif! Ditahan selama ${remainingSec}s lagi untuk mencegah loop.`,
+        };
+      }
+      isCircuitBreakerTripped = false;
+      switchHistory = [];
+    }
+
+    // 2. Check cooldown between switches
     if (now - lastSwitchTime < DEFAULT_COOLDOWN_MS) {
       const remainingSec = Math.ceil((DEFAULT_COOLDOWN_MS - (now - lastSwitchTime)) / 1000);
       return { success: false, reason: `Dalam masa cooldown (${remainingSec}s tersisa)` };
@@ -345,16 +419,31 @@ export default function activate(orca) {
       ]);
 
       lastSwitchTime = Date.now();
+      switchHistory.push(lastSwitchTime);
+
+      // Purge entries outside sliding window
+      const cutoff = lastSwitchTime - CIRCUIT_BREAKER_WINDOW_MS;
+      switchHistory = switchHistory.filter((t) => t >= cutoff);
+
+      if (switchHistory.length >= CIRCUIT_BREAKER_MAX) {
+        isCircuitBreakerTripped = true;
+        circuitBreakerTrippedAt = lastSwitchTime;
+        orca.log(`Circuit breaker tripped: ${switchHistory.length} switches in ${CIRCUIT_BREAKER_WINDOW_MS / 1000}s`);
+        await orca.host.call('notifications.show', {
+          title: 'Rotasi Ditahan (Circuit Breaker)',
+          body: `Batas pergantian tercapai (${CIRCUIT_BREAKER_MAX}x dlm ${Math.round(CIRCUIT_BREAKER_WINDOW_MS / 1000)}s). Ditahan sementara.`,
+        });
+      }
 
       await orca.host.call('notifications.show', {
         title: 'Akun Dirotasi',
-        body: `Beralih ke ${target.email}. Melanjutkan pengerjaan...`,
+        body: `Beralih ke ${target.email}.`,
       });
 
       // Settle delay before resuming terminal
       await new Promise((resolve) => setTimeout(resolve, SETTLE_DELAY_MS));
 
-      // Auto-resume active terminal (prioritizing Antigravity agent sessions)
+      // Auto-resume active terminal
       const termsData = await runOrcaCommand(['terminal', 'list', '--json']);
       const terms = (termsData && termsData.result && termsData.result.terminals) || [];
       const writableTerms = terms.filter((t) => t.connected && t.writable);
@@ -364,22 +453,38 @@ export default function activate(orca) {
         return text.includes('antigravity') || text.includes('gemini') || text.includes('agy') || text.includes('argon') || text.includes('carbon');
       }
 
-      writableTerms.sort((a, b) => {
-        const aAgent = isAgentTerminal(a) ? 1 : 0;
-        const bAgent = isAgentTerminal(b) ? 1 : 0;
-        if (aAgent !== bAgent) return bAgent - aAgent;
-        return (b.lastOutputAt || 0) - (a.lastOutputAt || 0);
-      });
+      let targetTerm = null;
 
-      const activeTerm = writableTerms[0];
+      // Respect target_terminal from config if specified
+      if (TARGET_TERMINAL_CONFIG) {
+        targetTerm = writableTerms.find((t) => t.handle === TARGET_TERMINAL_CONFIG || t.id === TARGET_TERMINAL_CONFIG);
+        if (!targetTerm) {
+          orca.log(`Configured target_terminal '${TARGET_TERMINAL_CONFIG}' not found or not writable.`);
+        }
+      }
 
-      if (activeTerm) {
+      // If no valid target_terminal from config, pick only from terminals that pass isAgentTerminal
+      if (!targetTerm) {
+        const agentTerms = writableTerms.filter(isAgentTerminal);
+        if (agentTerms.length > 0) {
+          agentTerms.sort((a, b) => (b.lastOutputAt || 0) - (a.lastOutputAt || 0));
+          targetTerm = agentTerms[0];
+        }
+      }
+
+      if (targetTerm) {
         await orca.host.call('terminal.sendText', {
-          terminalId: activeTerm.handle,
-          text: 'lanjutkan pengerjaan tadi',
+          terminalId: targetTerm.handle,
+          text: RESUME_COMMAND,
           enter: true,
         });
-        orca.log(`Auto-resume sent to terminal ${activeTerm.handle}`);
+        orca.log(`Auto-resume sent to agent terminal ${targetTerm.handle}`);
+      } else {
+        orca.log('Auto-resume skipped: no active Antigravity agent terminal found.');
+        await orca.host.call('notifications.show', {
+          title: 'Auto-Resume Dilewati',
+          body: 'Tidak ditemukan terminal agen Antigravity aktif untuk dilanjutkan.',
+        });
       }
 
       const newState = await fetchAccountsData();
@@ -450,7 +555,7 @@ export default function activate(orca) {
     });
 
     orca.panels.handle('telemetry.read', async () => {
-      return computeTokenTelemetry();
+      return await computeTokenTelemetry();
     });
 
     orca.panels.handle('accounts.rotateNow', async () => {

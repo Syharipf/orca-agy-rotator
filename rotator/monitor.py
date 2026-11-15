@@ -125,6 +125,11 @@ class LogMonitor:
         for path, watcher in list(self.watchers.items()):
             new_lines = watcher.read_new_lines()
             for line in new_lines:
+                # If reading transcript files, ignore ordinary chat/diff text (only trigger on actual ERROR status)
+                if "transcript" in path.name.lower():
+                    if '"status":"ERROR"' not in line and '"status": "ERROR"' not in line:
+                        continue
+
                 for regex in self.compiled_patterns:
                     match = regex.search(line)
                     if match:
