@@ -2,7 +2,7 @@
 // Handles real-time quota monitoring, model detection, status bar updates, and panel RPC.
 
 import { execFile } from 'node:child_process';
-import { existsSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
@@ -114,6 +114,97 @@ export default function activate(orca) {
     };
   }
 
+  function computeTokenTelemetry() {
+    const brainDir = join(homedir(), '.config', 'orca', 'antigravity-chat', 'antigravity-acp', 'brain');
+    if (!existsSync(brainDir)) return null;
+
+    try {
+      const convDirs = readdirSync(brainDir);
+      const now = Date.now();
+      const ONE_DAY = 24 * 60 * 60 * 1000;
+      const cutoffs = {
+        today: now - ONE_DAY,
+        '7d': now - 7 * ONE_DAY,
+        '30d': now - 30 * ONE_DAY,
+        all: 0,
+      };
+
+      const stats = {
+        today: { total: 0, input: 0, output: 0, cache: 0, turns: 0 },
+        '7d': { total: 0, input: 0, output: 0, cache: 0, turns: 0 },
+        '30d': { total: 0, input: 0, output: 0, cache: 0, turns: 0 },
+        all: { total: 0, input: 0, output: 0, cache: 0, turns: 0 },
+      };
+
+      const dailyMap = {};
+      const hourlyTodayMap = {};
+
+      for (const c of convDirs) {
+        const tFile = join(brainDir, c, '.system_generated', 'logs', 'transcript.jsonl');
+        if (!existsSync(tFile)) continue;
+        try {
+          const content = readFileSync(tFile, 'utf8');
+          const lines = content.split('\n');
+          for (const line of lines) {
+            if (!line.includes('input_tokens')) continue;
+            try {
+              const d = JSON.parse(line);
+              const inp = d.input_tokens || 0;
+              const out = d.output_tokens || 0;
+              const cch = d.cache_read_tokens || 0;
+              const tot = inp + out + cch;
+              if (!tot && !d.created_at) continue;
+
+              const ts = d.created_at ? new Date(d.created_at).getTime() : now;
+              const dateStr = d.created_at ? d.created_at.slice(0, 10) : 'Today';
+
+              if (!dailyMap[dateStr]) dailyMap[dateStr] = { date: dateStr, total: 0, input: 0, output: 0, cache: 0, turns: 0 };
+              dailyMap[dateStr].total += tot;
+              dailyMap[dateStr].input += inp;
+              dailyMap[dateStr].output += out;
+              dailyMap[dateStr].cache += cch;
+              dailyMap[dateStr].turns += 1;
+
+              if (ts >= cutoffs.today) {
+                const hourStr = (d.created_at ? d.created_at.slice(11, 13) : '12') + ':00';
+                if (!hourlyTodayMap[hourStr]) hourlyTodayMap[hourStr] = { label: hourStr, total: 0, input: 0, output: 0, cache: 0, turns: 0 };
+                hourlyTodayMap[hourStr].total += tot;
+                hourlyTodayMap[hourStr].input += inp;
+                hourlyTodayMap[hourStr].output += out;
+                hourlyTodayMap[hourStr].cache += cch;
+                hourlyTodayMap[hourStr].turns += 1;
+              }
+
+              for (const [key, cutoff] of Object.entries(cutoffs)) {
+                if (ts >= cutoff) {
+                  stats[key].total += tot;
+                  stats[key].input += inp;
+                  stats[key].output += out;
+                  stats[key].cache += cch;
+                  stats[key].turns += 1;
+                }
+              }
+            } catch (e) {}
+          }
+        } catch (e) {}
+      }
+
+      for (const s of Object.values(stats)) {
+        s.hitRate = s.total > 0 ? (s.cache / s.total) * 100 : 0;
+        s.cost = (s.input * 1.25 + s.output * 5.00 + s.cache * 0.30) / 1_000_000;
+        s.savings = (s.cache * (1.25 - 0.30)) / 1_000_000;
+      }
+
+      return {
+        periods: stats,
+        daily: Object.values(dailyMap).sort((a, b) => a.date.localeCompare(b.date)),
+        hourlyToday: Object.values(hourlyTodayMap).sort((a, b) => a.label.localeCompare(b.label)),
+      };
+    } catch (err) {
+      return null;
+    }
+  }
+
   async function fetchAccountsData() {
     const data = await runOrcaCommand(['account', 'list', '--agent', 'antigravity', '--json'], (msg) => orca.log(msg));
     if (!data || !data.result) return null;
@@ -154,6 +245,7 @@ export default function activate(orca) {
     const healthPercent = totalAccounts > 0 ? Math.round((availableAccounts / totalAccounts) * 100) : 0;
 
     const activeSession = await detectActiveSession();
+    const telemetry = computeTokenTelemetry();
 
     return {
       accounts,
@@ -166,6 +258,7 @@ export default function activate(orca) {
         healthPercent,
       },
       activeSession,
+      telemetry,
       timestamp: Date.now(),
     };
   }
@@ -336,6 +429,10 @@ export default function activate(orca) {
     orca.panels.handle('accounts.read', async () => {
       const state = await fetchAccountsData();
       return state || { accounts: [], activeId: null };
+    });
+
+    orca.panels.handle('telemetry.read', async () => {
+      return computeTokenTelemetry();
     });
 
     orca.panels.handle('accounts.rotateNow', async () => {
