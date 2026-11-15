@@ -442,8 +442,13 @@ export default function activate(orca) {
     orca.panels.handle('accounts.selectTarget', async (input) => {
       const target = (input && input.target) || input;
       if (!target) return { success: false, reason: 'Target missing' };
-      const res = await runOrcaCommand(['account', 'select', '--agent', 'antigravity', '--account', target, '--json']);
+      orca.log(`Selecting account requested: ${target}`);
+      const res = await runOrcaCommand(['account', 'select', '--agent', 'antigravity', '--account', target, '--json'], (msg) => orca.log(msg));
       lastSwitchTime = Date.now();
+
+      // Short settle time for Orca account manager state to persist
+      await new Promise((r) => setTimeout(r, 400));
+
       const state = await fetchAccountsData();
       if (state) {
         await updateStatusBar(state.activeAccount, state.activeSession?.model);
