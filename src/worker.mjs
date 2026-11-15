@@ -241,10 +241,24 @@ export default function activate(orca) {
       // Settle delay before resuming terminal
       await new Promise((resolve) => setTimeout(resolve, SETTLE_DELAY_MS));
 
-      // Auto-resume active terminal
+      // Auto-resume active terminal (prioritizing Antigravity agent sessions)
       const termsData = await runOrcaCommand(['terminal', 'list', '--json']);
       const terms = (termsData && termsData.result && termsData.result.terminals) || [];
-      const activeTerm = terms.find((t) => t.connected && t.writable);
+      const writableTerms = terms.filter((t) => t.connected && t.writable);
+
+      function isAgentTerminal(t) {
+        const text = `${t.title || ''} ${t.preview || ''} ${t.agentIdentity || ''}`.toLowerCase();
+        return text.includes('antigravity') || text.includes('gemini') || text.includes('agy') || text.includes('argon') || text.includes('carbon');
+      }
+
+      writableTerms.sort((a, b) => {
+        const aAgent = isAgentTerminal(a) ? 1 : 0;
+        const bAgent = isAgentTerminal(b) ? 1 : 0;
+        if (aAgent !== bAgent) return bAgent - aAgent;
+        return (b.lastOutputAt || 0) - (a.lastOutputAt || 0);
+      });
+
+      const activeTerm = writableTerms[0];
 
       if (activeTerm) {
         await orca.host.call('terminal.sendText', {
@@ -284,7 +298,7 @@ export default function activate(orca) {
 
       // Auto rotate if active account is exhausted
       if (state.activeAccount && state.activeAccount.isExhausted) {
-        await rotateToBestAccount(`Kuota akun aktif habis (${Math.round(state.activeAccount.sessionUsed * 100)}%)`);
+        await rotateToBestAccount(`Kuota akun aktif habis (${Math.round(state.activeAccount.sessionUsed)}%)`);
       }
     } catch (e) {
       orca.log(`Error in checkQuotaAndRefresh: ${e.message}`);
