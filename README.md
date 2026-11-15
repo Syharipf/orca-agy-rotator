@@ -251,7 +251,7 @@ OK
 
 ## Security & Isolation
 
-- **Keyring Delegation:** Credentials are never cached, logged, or managed directly by this tool. Account switching relies exclusively on the official `orca account select` CLI invocation delegating to system keyring stores.
+- **Keyring Delegation:** Credentials are never cached, logged, or managed directly by this tool. Account switching relies exclusively on the `orca account select` CLI invocation delegating to system keyring stores.
 - **Privacy Masking:** The `--mask` CLI flag and UI toggle replace real email addresses with deterministic dummy identifiers, ensuring safety during video capture and public demonstrations.
 - **Unprivileged Execution:** Operates entirely within standard user permissions (`systemd --user`). Root privileges are not required.
 

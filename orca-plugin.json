@@ -4,7 +4,7 @@
   "id": "antigravity-rotator",
   "name": "Antigravity Auto-Switcher",
   "version": "1.0.0",
-  "description": "Smart account rotation and auto-resume for Antigravity (agy) on Orca ADE. Automatically switches to unused accounts upon hitting rate limits (429 / RESOURCE_EXHAUSTED).",
+  "description": "Account rotation and auto-resume for Antigravity on Orca ADE. Switches to lowest-usage account upon rate limits (429 / RESOURCE_EXHAUSTED).",
   "license": "MIT",
   "author": {
     "name": "syharipf"

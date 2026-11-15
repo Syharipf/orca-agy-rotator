@@ -886,11 +886,11 @@
       </div>
       <div class="card-meta">
         <span id="kpiCacheTokens">0 cached tokens</span>
-        <span>90% reduction</span>
+        <span>Context cache</span>
       </div>
     </div>
 
-    <!-- Card 4: Session Quota & Failover Readiness -->
+    <!-- Card 4: Session Quota & Account Pool -->
     <div class="card">
       <div class="card-title">Session Quota (5h)</div>
       <div id="kpiSessionQuota" class="card-num">0%</div>
@@ -899,7 +899,7 @@
       </div>
       <div class="card-meta">
         <span id="kpiFleetReady">5/6 ready</span>
-        <span>Failover &lt; 100ms</span>
+        <span>Account pool</span>
       </div>
     </div>
   </section>
@@ -1665,7 +1665,7 @@
     const orig = btn.innerHTML;
     btn.innerHTML = 'Rotating...';
     try {
-      showToast('Finding best candidate with lowest quota...');
+      showToast('Selecting account with lowest quota...');
       const res = await rpc('accounts.rotateNow');
       const result = (res && res.value !== undefined) ? res.value : res;
       if (result && result.success) {
