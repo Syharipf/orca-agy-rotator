@@ -158,7 +158,7 @@ class RotatorDaemon:
                 events = self.log_monitor.check_for_rate_limits()
                 if events:
                     first_event = events[0]
-                    trigger_msg = f"Log match [{first_event.pattern}] pada {first_event.source}"
+                    trigger_msg = f"Pattern [{first_event.pattern}]"
                     self.trigger_rotation(trigger_reason=trigger_msg)
 
                 # Step 2: Periodic direct quota check from Orca account API
