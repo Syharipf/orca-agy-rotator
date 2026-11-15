@@ -102,8 +102,8 @@ The repository provides two deployment targets that can run independently or in 
 
 1. Clone repository:
    ```bash
-   git clone https://github.com/syharipf/orca-antigravity-rotator.git
-   cd orca-antigravity-rotator
+   git clone https://github.com/Syharipf/orca-agy-rotator.git
+   cd orca-agy-rotator
    ```
 
 2. Validate manifest:
