@@ -79,12 +79,12 @@ Contoh output:
 ==========================================================================================
 STATUS     | EMAIL                            | SESSION    | WEEKLY     | RESET TERDEKAT      
 ==========================================================================================
-READY      | efeklemah@gmail.com              | 0%         | 0%         | 23:09:59 (228m lagi)
-EXHAUST    | syharipf@gmail.com               | 200%       | 200%       | 23:25:32 (244m lagi)
-EXHAUST    | putrisakiadiana@gmail.com        | 100%       | 100%       | 23:43:11 (262m lagi)
-EXHAUST    | putradenypratama3@gmail.com      | 100%       | 100%       | 23:50:54 (269m lagi)
-EXHAUST    | parisrendypangalila@gmail.com    | 100%       | 100%       | 23:52:13 (271m lagi)
-[ACTIVE]   | indahmysri1@gmail.com            | 0%         | 0%         | 00:13:37 (292m lagi)
+READY      | dev-account-1@gmail.com          | 0%         | 0%         | 23:09:59 (178m lagi)
+READY      | dev-account-2@gmail.com          | 2%         | 2%         | 23:25:32 (194m lagi)
+READY      | dev-account-3@gmail.com          | 1%         | 1%         | 23:43:11 (211m lagi)
+READY      | dev-account-4@gmail.com          | 1%         | 1%         | 23:50:54 (219m lagi)
+READY      | dev-account-5@gmail.com          | 1%         | 1%         | 23:52:13 (220m lagi)
+[ACTIVE]   | dev-account-6@gmail.com          | 0%         | 0%         | 01:08:49 (297m lagi)
 ==========================================================================================
 ```
 
@@ -95,7 +95,7 @@ EXHAUST    | parisrendypangalila@gmail.com    | 100%       | 100%       | 23:52:
   ```
 - Beralih ke email spesifik:
   ```bash
-  ./main.py switch efeklemah@gmail.com
+  ./main.py switch dev-account-1@gmail.com
   ```
 - Menguji rotasi tanpa mengubah akun sungguhan (*dry-run*):
   ```bash

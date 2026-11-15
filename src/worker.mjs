@@ -74,15 +74,15 @@ export default function activate(orca) {
         const title = t.title || '';
         const combined = `${title} ${preview}`;
 
-        // Look for model name
-        const match = combined.match(/(?:Gemini\s+[0-9\.]+(?:\s+[a-z]+)?|GPT-[0-9\.]+(?:\s+[a-z]+)?|Claude\s+[0-9\.]+(?:\s+[a-z]+)?)/i);
+        // Look for model name (including paid/internal models like Argon, Carbon, Claude, GPT, Gemini)
+        const match = combined.match(/(?:Argon(?:\s+[a-z0-9\.-]+)?|Carbon(?:\s+[a-z0-9\.-]+)?|Gemini\s+[0-9\.]+(?:\s+[a-z]+)?|GPT-[0-9\.]+(?:\s+[a-z]+)?|Claude\s+[0-9\.]+(?:\s+[a-z]+)?|o[13](?:-mini|-preview)?|DeepSeek-[a-z0-9\.-]+)/i);
         const modelName = match ? match[0].trim() : null;
 
-        if (modelName || combined.toLowerCase().includes('antigravity') || combined.toLowerCase().includes('gemini')) {
+        if (modelName || combined.toLowerCase().includes('antigravity') || combined.toLowerCase().includes('gemini') || combined.toLowerCase().includes('argon') || combined.toLowerCase().includes('carbon')) {
           return {
             terminalId: t.handle,
             title: t.title || 'Terminal Session',
-            model: modelName || 'Gemini Models (Antigravity)',
+            model: modelName || 'Gemini / Paid Models (Antigravity)',
             agent: t.agentIdentity || 'antigravity',
             lastOutputAt: t.lastOutputAt,
           };

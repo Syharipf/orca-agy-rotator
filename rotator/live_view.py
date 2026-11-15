@@ -79,7 +79,7 @@ def run_live_monitor(config: RotatorConfig):
             session_title = active_term.title if active_term else "Standby (No active session)"
             if active_term and active_term.preview:
                 import re
-                m = re.search(r"(?:Gemini\s+[0-9\.]+(?:\s+[a-z]+)?|GPT-[0-9\.]+(?:\s+[a-z]+)?|Claude\s+[0-9\.]+(?:\s+[a-z]+)?)", active_term.preview, re.I)
+                m = re.search(r"(?:Argon(?:\s+[a-z0-9\.-]+)?|Carbon(?:\s+[a-z0-9\.-]+)?|Gemini\s+[0-9\.]+(?:\s+[a-z]+)?|GPT-[0-9\.]+(?:\s+[a-z]+)?|Claude\s+[0-9\.]+(?:\s+[a-z]+)?|o[13](?:-mini|-preview)?|DeepSeek-[a-z0-9\.-]+)", active_term.preview, re.I)
                 if m:
                     model_name = m.group(0).strip()
 
