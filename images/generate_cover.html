@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cover Generator</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      width: 960px;
+      height: 600px;
+      overflow: hidden;
+      background: #0b0e17;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", sans-serif;
+      color: #ececec;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .cover-container {
+      width: 960px;
+      height: 600px;
+      position: relative;
+      display: flex;
+      background: radial-gradient(circle at 75% 35%, rgba(2, 132, 199, 0.12) 0%, transparent 55%),
+                  radial-gradient(circle at 20% 80%, rgba(139, 92, 246, 0.08) 0%, transparent 45%),
+                  linear-gradient(135deg, #0b0e17 0%, #070910 100%);
+    }
+
+    /* Subtle dot grid pattern */
+    .grid-overlay {
+      position: absolute;
+      inset: 0;
+      background-image: radial-gradient(#334155 0.8px, transparent 0.8px);
+      background-size: 24px 24px;
+      opacity: 0.35;
+      pointer-events: none;
+    }
+
+    /* Left Branding Column */
+    .left-col {
+      width: 440px;
+      height: 100%;
+      padding: 44px 0 44px 44px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      z-index: 2;
+    }
+
+    .brand-top {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .badge-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(3, 105, 161, 0.2);
+      border: 1px solid rgba(2, 132, 199, 0.7);
+      padding: 3px 10px;
+      border-radius: 12px;
+      width: fit-content;
+    }
+    .badge-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #38bdf8;
+      box-shadow: 0 0 6px #38bdf8;
+    }
+    .badge-txt {
+      font-size: 10.5px;
+      font-weight: 600;
+      color: #7dd3fc;
+      letter-spacing: 0.3px;
+    }
+
+    .main-title {
+      font-size: 32px;
+      font-weight: 800;
+      letter-spacing: -0.8px;
+      line-height: 1.15;
+      color: #ffffff;
+    }
+    .main-title span {
+      background: linear-gradient(135deg, #38bdf8 0%, #60a5fa 50%, #a78bfa 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .main-desc {
+      font-size: 13px;
+      line-height: 1.5;
+      color: #94a3b8;
+      margin-top: 2px;
+    }
+
+    /* 3 Value Pillars */
+    .features-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 6px;
+    }
+    .feat-card {
+      background: rgba(19, 24, 38, 0.75);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      padding: 8px 12px;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      backdrop-filter: blur(8px);
+    }
+    .feat-icon {
+      font-size: 14px;
+      line-height: 1.2;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .feat-content h3 {
+      font-size: 12px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 2px;
+    }
+    .feat-content p {
+      font-size: 10.5px;
+      color: #94a3b8;
+      line-height: 1.35;
+    }
+
+    .left-footer {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 10.5px;
+      font-family: "JetBrains Mono", "SF Mono", monospace;
+      color: #64748b;
+    }
+    .left-footer span.bullet {
+      color: #334155;
+    }
+
+    /* Right Preview Window */
+    .right-col {
+      width: 520px;
+      height: 100%;
+      padding: 24px 28px 24px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      z-index: 2;
+    }
+
+    .window-card {
+      width: 100%;
+      height: 552px;
+      background: #0d121e;
+      border: 1px solid #1f293d;
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.06);
+    }
+
+    .window-topbar {
+      height: 32px;
+      background: #080c14;
+      border-bottom: 1px solid #1f283d;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 12px;
+      flex-shrink: 0;
+    }
+    .traffic-dots {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+    }
+    .dot-close { background: #ef4444; opacity: 0.8; }
+    .dot-min { background: #f59e0b; opacity: 0.8; }
+    .dot-max { background: #10b981; opacity: 0.8; }
+
+    .window-title {
+      font-family: "JetBrains Mono", "SF Mono", monospace;
+      font-size: 10px;
+      color: #64748b;
+    }
+    .window-status {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 9.5px;
+      color: #38bdf8;
+    }
+    .status-pulse {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #10b981;
+      box-shadow: 0 0 6px #10b981;
+    }
+
+    .window-body {
+      flex: 1;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Embedded Real Panel via iframe */
+    .panel-frame {
+      width: 100%;
+      height: 100%;
+      border: 0;
+      display: block;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+
+<div class="cover-container">
+  <div class="grid-overlay"></div>
+
+  <!-- Left Column: High-Signal Branding & Architecture -->
+  <div class="left-col">
+    <div class="brand-top">
+      <div class="badge-pill">
+        <span class="badge-dot"></span>
+        <span class="badge-txt">OFFICIAL ORCA ADE PLUGIN</span>
+      </div>
+
+      <h1 class="main-title">
+        Antigravity<br>
+        <span>Auto-Switcher</span>
+      </h1>
+
+      <p class="main-desc">
+        Zero-downtime multi-account failover pool, live prompt cache telemetry, and autonomous continuation trigger for autonomous coding.
+      </p>
+    </div>
+
+    <!-- 3 Value Pillars (Crisp Engineering Specs) -->
+    <div class="features-list">
+      <div class="feat-card">
+        <span class="feat-icon">⚡</span>
+        <div class="feat-content">
+          <h3>&lt; 100ms Instant Failover</h3>
+          <p>Swaps to lowest-quota keyring account automatically upon encountering 429 rate limits.</p>
+        </div>
+      </div>
+
+      <div class="feat-card">
+        <span class="feat-icon">📊</span>
+        <div class="feat-content">
+          <h3>114M+ Tokens &amp; Cache Telemetry</h3>
+          <p>Live tracking of prompt cache hit rates (96.4%), token velocity, and estimated API savings.</p>
+        </div>
+      </div>
+
+      <div class="feat-card">
+        <span class="feat-icon">🔄</span>
+        <div class="feat-content">
+          <h3>Terminal Auto-Resume</h3>
+          <p>Injects continuation prompts to the active agent session so long workflows never stall.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Tech Specs -->
+    <div class="left-footer">
+      <span>Trusted Worker</span>
+      <span class="bullet">·</span>
+      <span>Live Polling 3.5s</span>
+      <span class="bullet">·</span>
+      <span>v1.0.0</span>
+    </div>
+  </div>
+
+  <!-- Right Column: Real Live Panel Window Mockup -->
+  <div class="right-col">
+    <div class="window-card">
+      <div class="window-topbar">
+        <div class="traffic-dots">
+          <div class="dot dot-close"></div>
+          <div class="dot dot-min"></div>
+          <div class="dot dot-max"></div>
+        </div>
+        <span class="window-title">Antigravity Switcher (Right Sidebar)</span>
+        <div class="window-status">
+          <span class="status-pulse"></span>
+          <span>LIVE</span>
+        </div>
+      </div>
+
+      <div class="window-body">
+        <iframe class="panel-frame" src="../panel/index.html?mask=1"></iframe>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
