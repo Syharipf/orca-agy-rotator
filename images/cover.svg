@@ -1,37 +1,43 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 600" width="960" height="600">
   <defs>
-    <!-- Background Canvas Gradient -->
+    <!-- Dark IDE Background Gradient -->
     <linearGradient id="bg" x1="0" y1="0" x2="0" y2="600" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#0a0e17"/>
+      <stop offset="0%" stop-color="#0a0d16"/>
       <stop offset="100%" stop-color="#04060a"/>
     </linearGradient>
 
-    <!-- Title Emerald-to-Cyan Gradient -->
+    <!-- Title Mint-to-Cyan Gradient -->
     <linearGradient id="titleGrad" x1="0" y1="0" x2="1" y2="0">
       <stop offset="0%" stop-color="#34d399"/>
       <stop offset="100%" stop-color="#38bdf8"/>
     </linearGradient>
 
-    <!-- Ambient Glows -->
-    <radialGradient id="glowLeft" cx="180" cy="180" r="300" gradientUnits="userSpaceOnUse">
+    <!-- Left & Right Ambient Glows -->
+    <radialGradient id="glowLeft" cx="160" cy="180" r="320" gradientUnits="userSpaceOnUse">
       <stop offset="0%" stop-color="#10b981" stop-opacity="0.14"/>
       <stop offset="100%" stop-color="#10b981" stop-opacity="0"/>
     </radialGradient>
-    <radialGradient id="glowRight" cx="720" cy="320" r="360" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#0284c7" stop-opacity="0.12"/>
-      <stop offset="100%" stop-color="#0284c7" stop-opacity="0"/>
+    <radialGradient id="glowRight" cx="720" cy="300" r="380" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#0ea5e9" stop-opacity="0.10"/>
+      <stop offset="100%" stop-color="#0ea5e9" stop-opacity="0"/>
     </radialGradient>
 
-    <!-- Floating Card Gradient -->
-    <linearGradient id="panelCardBg" x1="0" y1="0" x2="0" y2="480" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#111827"/>
-      <stop offset="100%" stop-color="#0b0f19"/>
+    <!-- Panel Window Glass Gradient -->
+    <linearGradient id="panelBg" x1="0" y1="0" x2="0" y2="520" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#0f131f"/>
+      <stop offset="100%" stop-color="#090d16"/>
     </linearGradient>
 
-    <!-- Active Route Highlight Gradient -->
-    <linearGradient id="activeRouteBg" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0%" stop-color="#064e3b" stop-opacity="0.45"/>
-      <stop offset="100%" stop-color="#064e3b" stop-opacity="0.08"/>
+    <!-- Card Background -->
+    <linearGradient id="cardBg" x1="0" y1="0" x2="0" y2="70" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#121726"/>
+      <stop offset="100%" stop-color="#0e121e"/>
+    </linearGradient>
+
+    <!-- Active Card Border & Glow -->
+    <linearGradient id="activeCardBg" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#064e3b" stop-opacity="0.32"/>
+      <stop offset="100%" stop-color="#064e3b" stop-opacity="0.06"/>
     </linearGradient>
 
     <!-- Icon Gradients -->
@@ -44,14 +50,14 @@
       <stop offset="100%" stop-color="#0284c7"/>
     </linearGradient>
 
-    <!-- Dot Grid Pattern -->
-    <pattern id="dotGrid" width="28" height="28" patternUnits="userSpaceOnUse">
-      <circle cx="2" cy="2" r="1" fill="#334155" fill-opacity="0.25"/>
+    <!-- Dot Pattern -->
+    <pattern id="dotPattern" width="28" height="28" patternUnits="userSpaceOnUse">
+      <circle cx="2" cy="2" r="1" fill="#334155" fill-opacity="0.22"/>
     </pattern>
   </defs>
 
   <style>
-    .font-heavy { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", Helvetica, sans-serif; font-weight: 800; }
+    .font-bold { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", Helvetica, sans-serif; font-weight: 700; }
     .font-semi { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", Helvetica, sans-serif; font-weight: 600; }
     .font-regular { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", Helvetica, sans-serif; font-weight: 400; }
     .font-mono { font-family: "JetBrains Mono", "Fira Code", Menlo, Monaco, Consolas, monospace; }
@@ -59,21 +65,21 @@
 
   <!-- Background Base -->
   <rect width="960" height="600" fill="url(#bg)"/>
-  <rect width="960" height="600" fill="url(#dotGrid)"/>
-  <circle cx="180" cy="180" r="300" fill="url(#glowLeft)"/>
-  <circle cx="720" cy="320" r="360" fill="url(#glowRight)"/>
+  <rect width="960" height="600" fill="url(#dotPattern)"/>
+  <circle cx="160" cy="180" r="320" fill="url(#glowLeft)"/>
+  <circle cx="720" cy="300" r="380" fill="url(#glowRight)"/>
 
-  <!-- ================= LEFT COLUMN: HERO BRANDING ================= -->
-  <g transform="translate(56, 56)">
-    <!-- Store Badge Tag -->
+  <!-- ================= LEFT COLUMN: HERO IDENTITY & VALUE PROP ================= -->
+  <g transform="translate(54, 52)">
+    <!-- Store Category Pill -->
     <g transform="translate(0, 0)">
-      <rect x="0" y="0" width="168" height="24" rx="12" fill="#064e3b" fill-opacity="0.4" stroke="#059669" stroke-width="1"/>
+      <rect x="0" y="0" width="166" height="24" rx="12" fill="#064e3b" fill-opacity="0.4" stroke="#059669" stroke-width="1"/>
       <circle cx="12" cy="12" r="3.5" fill="#34d399"/>
       <text x="24" y="16" class="font-semi" font-size="11" fill="#a7f3d0">Official Orca Plugin v2</text>
     </g>
 
-    <!-- App Icon (Vector 64x64) -->
-    <g transform="translate(0, 42)">
+    <!-- App Brand Icon (Exact Vector 64x64) -->
+    <g transform="translate(0, 40)">
       <rect x="0" y="0" width="64" height="64" rx="16" fill="#111827" stroke="#1f2937" stroke-width="1.5"/>
       <g transform="translate(8, 8) scale(0.375)">
         <path d="M 58 29 A 35 35 0 0 1 97 58 A 35 35 0 0 1 90 80" fill="none" stroke="url(#emeraldGrad)" stroke-width="6" stroke-linecap="round"/>
@@ -85,212 +91,290 @@
       </g>
     </g>
 
-    <!-- Headline (Store Style Typography) -->
-    <text x="0" y="148" class="font-heavy" font-size="34" fill="#ffffff" letter-spacing="-0.8">Antigravity</text>
-    <text x="0" y="186" class="font-heavy" font-size="34" fill="url(#titleGrad)" letter-spacing="-0.8">Auto-Switcher</text>
+    <!-- Headline (Clean, Professional Typography) -->
+    <text x="0" y="146" class="font-bold" font-size="33" fill="#ffffff" letter-spacing="-0.8">Antigravity</text>
+    <text x="0" y="184" class="font-bold" font-size="33" fill="url(#titleGrad)" letter-spacing="-0.8">Auto-Switcher</text>
 
     <!-- Subtitle / Value Prop -->
-    <text x="0" y="222" class="font-regular" font-size="14.5" fill="#94a3b8" line-height="1.5">
-      Zero-downtime rate limit failover and
-    </text>
-    <text x="0" y="242" class="font-regular" font-size="14.5" fill="#94a3b8">
-      autonomous quota rotator for Orca ADE.
-    </text>
+    <text x="0" y="218" class="font-regular" font-size="14" fill="#94a3b8">Automated quota failover and account</text>
+    <text x="0" y="238" class="font-regular" font-size="14" fill="#94a3b8">rotation engine for Orca ADE.</text>
 
-    <!-- Feature Checklist (Store Highlights) -->
-    <g transform="translate(0, 274)">
-      <!-- Item 1 -->
+    <!-- Feature Bullet Points -->
+    <g transform="translate(0, 270)">
+      <!-- Feature 1 -->
       <g transform="translate(0, 0)">
-        <circle cx="6" cy="7" r="3" fill="#10b981"/>
-        <text x="18" y="11" class="font-semi" font-size="12.5" fill="#f1f5f9">Instant 429 Failover (&lt; 100ms)</text>
-        <text x="18" y="27" class="font-regular" font-size="11" fill="#64748b">Auto-switches to empty (0%) quota</text>
+        <circle cx="5" cy="7" r="3.5" fill="#10b981"/>
+        <text x="18" y="11" class="font-semi" font-size="12.5" fill="#f8fafc">Instant 429 Failover</text>
+        <text x="18" y="27" class="font-regular" font-size="11" fill="#64748b">Auto-rotates to 0% quota accounts</text>
       </g>
 
-      <!-- Item 2 -->
+      <!-- Feature 2 -->
       <g transform="translate(0, 44)">
-        <circle cx="6" cy="7" r="3" fill="#38bdf8"/>
-        <text x="18" y="11" class="font-semi" font-size="12.5" fill="#f1f5f9">Automated Session Resume</text>
-        <text x="18" y="27" class="font-regular" font-size="11" fill="#64748b">Injects resume trigger to active PTY</text>
+        <circle cx="5" cy="7" r="3.5" fill="#38bdf8"/>
+        <text x="18" y="11" class="font-semi" font-size="12.5" fill="#f8fafc">Context-Aware Auto-Resume</text>
+        <text x="18" y="27" class="font-regular" font-size="11" fill="#64748b">Continues terminal turns seamlessly</text>
       </g>
 
-      <!-- Item 3 -->
+      <!-- Feature 3 -->
       <g transform="translate(0, 88)">
-        <circle cx="6" cy="7" r="3" fill="#f59e0b"/>
-        <text x="18" y="11" class="font-semi" font-size="12.5" fill="#f1f5f9">Anti-Ban Protection Engine</text>
-        <text x="18" y="27" class="font-regular" font-size="11" fill="#64748b">30s cooldown &amp; circuit breaker</text>
+        <circle cx="5" cy="7" r="3.5" fill="#f59e0b"/>
+        <text x="18" y="11" class="font-semi" font-size="12.5" fill="#f8fafc">Built-in Anti-Ban Guardrails</text>
+        <text x="18" y="27" class="font-regular" font-size="11" fill="#64748b">30s cooldown and circuit breaker</text>
       </g>
 
-      <!-- Item 4 -->
+      <!-- Feature 4 -->
       <g transform="translate(0, 132)">
-        <circle cx="6" cy="7" r="3" fill="#a7f3d0"/>
-        <text x="18" y="11" class="font-semi" font-size="12.5" fill="#f1f5f9">Cross-Platform Support</text>
-        <text x="18" y="27" class="font-regular" font-size="11" fill="#64748b">Linux · macOS · Windows (WSL)</text>
+        <circle cx="5" cy="7" r="3.5" fill="#a7f3d0"/>
+        <text x="18" y="11" class="font-semi" font-size="12.5" fill="#f8fafc">Cross-Platform Support</text>
+        <text x="18" y="27" class="font-regular" font-size="11" fill="#64748b">Linux daemon · macOS · Windows WSL</text>
       </g>
     </g>
 
-    <!-- Footer Stats / Open Source pill -->
-    <g transform="translate(0, 462)">
-      <rect x="0" y="0" width="310" height="26" rx="6" fill="#111827" stroke="#1e293b" stroke-width="1"/>
-      <text x="12" y="17" class="font-mono" font-size="11" fill="#64748b">MIT License  ·  Zero AI Slop  ·  7/7 Tests</text>
+    <!-- Bottom Metadata Pill (Clean, Technical, No Slop) -->
+    <g transform="translate(0, 464)">
+      <rect x="0" y="0" width="320" height="26" rx="6" fill="#111827" stroke="#1e293b" stroke-width="1"/>
+      <text x="12" y="17" class="font-mono" font-size="10.5" fill="#64748b">MIT License  ·  Python 3.10+  ·  7/7 Tests</text>
     </g>
   </g>
 
-  <!-- ================= RIGHT COLUMN: PRODUCT SHOWCASE CARD ================= -->
-  <!-- Floating Mockup of the Native Orca Sidebar Panel (460x490) -->
-  <g transform="translate(450, 52)">
-    <!-- Drop Shadow Box -->
-    <rect x="0" y="0" width="454" height="494" rx="14" fill="url(#panelCardBg)" stroke="#1e293b" stroke-width="1.5"/>
+  <!-- ================= RIGHT COLUMN: REALISTIC ORCA ADE PANEL ================= -->
+  <!-- Exact Mirror of panel/index.html UI (474 x 512) -->
+  <g transform="translate(442, 44)">
+    <!-- Window Outer Container with Border & Radius -->
+    <rect x="0" y="0" width="474" height="512" rx="10" fill="url(#panelBg)" stroke="#1f2430" stroke-width="1.5"/>
 
-    <!-- Panel Window Header -->
-    <g transform="translate(0, 0)">
-      <path d="M 0 14 C 0 6.27 6.27 0 14 0 L 440 0 C 447.73 0 454 6.27 454 14 L 454 42 L 0 42 Z" fill="#0c111d"/>
-      <line x1="0" y1="42" x2="454" y2="42" stroke="#1e293b" stroke-width="1"/>
+    <!-- 1. Top Bar -->
+    <g transform="translate(12, 12)">
+      <!-- Left: Title + Live Pill -->
+      <text x="0" y="15" class="font-semi" font-size="12" fill="#ffffff">Antigravity Switcher</text>
+      <rect x="126" y="3" width="44" height="17" rx="8.5" fill="#064e3b" stroke="#059669" stroke-width="1"/>
+      <circle cx="134" cy="11.5" r="2.5" fill="#34d399"/>
+      <text x="142" y="15" class="font-semi" font-size="9.5" fill="#34d399">Live</text>
 
-      <!-- Window Dots -->
-      <circle cx="18" cy="21" r="5" fill="#ef4444" fill-opacity="0.8"/>
-      <circle cx="34" cy="21" r="5" fill="#f59e0b" fill-opacity="0.8"/>
-      <circle cx="50" cy="21" r="5" fill="#10b981" fill-opacity="0.8"/>
+      <!-- Right Buttons: Mask, Sync, Rotate Best -->
+      <g transform="translate(230, 0)">
+        <!-- Mask Button -->
+        <rect x="0" y="1" width="68" height="21" rx="4" fill="#161a26" stroke="#252c3f" stroke-width="1"/>
+        <text x="8" y="15" class="font-sans" font-size="9.5" fill="#34d399">Mask: ON</text>
 
-      <!-- Title & Live Pill -->
-      <text x="70" y="25" class="font-semi" font-size="12" fill="#ffffff">Antigravity Switcher</text>
-      <rect x="195" y="12" width="46" height="18" rx="9" fill="#064e3b" stroke="#059669" stroke-width="1"/>
-      <circle cx="204" cy="21" r="2.5" fill="#34d399"/>
-      <text x="211" y="24" class="font-semi" font-size="9" fill="#34d399">Live</text>
+        <!-- Sync Button -->
+        <rect x="74" y="1" width="46" height="21" rx="4" fill="#161a26" stroke="#252c3f" stroke-width="1"/>
+        <text x="84" y="15" class="font-sans" font-size="9.5" fill="#cbd5e1">Sync</text>
 
-      <!-- Mask Button -->
-      <rect x="366" y="11" width="76" height="20" rx="4" fill="#1e293b" stroke="#334155" stroke-width="1"/>
-      <text x="375" y="24" class="font-mono" font-size="9.5" fill="#94a3b8">Mask: ON</text>
+        <!-- Rotate Best Button -->
+        <rect x="126" y="1" width="94" height="21" rx="4" fill="#252a3d" stroke="#3f4765" stroke-width="1"/>
+        <text x="136" y="15" class="font-semi" font-size="9.5" fill="#e0e7ff">Rotate Best</text>
+      </g>
+      <line x1="0" y1="28" x2="450" y2="28" stroke="#1f2430" stroke-width="1"/>
     </g>
 
-    <!-- Overview Bar (Session & Pool Health) -->
-    <g transform="translate(16, 56)">
-      <rect x="0" y="0" width="422" height="48" rx="8" fill="#0b0f19" stroke="#1e293b" stroke-width="1"/>
-      <text x="14" y="20" class="font-mono" font-size="10.5" fill="#cbd5e1">Model: Gemini 2.5 Pro / Claude 3.7</text>
-      <text x="290" y="20" class="font-mono" font-size="10.5" fill="#34d399">Pool: 5 / 6 Ready</text>
-      <!-- Health Bar -->
-      <rect x="14" y="30" width="394" height="4" rx="2" fill="#1e293b"/>
-      <rect x="14" y="30" width="328" height="4" rx="2" fill="#10b981"/>
-    </g>
+    <!-- 2. Overview Box (.overview-box) -->
+    <g transform="translate(12, 50)">
+      <rect x="0" y="0" width="450" height="106" rx="6" fill="#12151e" stroke="#1f2430" stroke-width="1"/>
 
-    <!-- Card 1: ACTIVE IN USE ACCOUNT (dev-lead@example.com) -->
-    <g transform="translate(16, 116)">
-      <rect x="0" y="0" width="422" height="76" rx="8" fill="url(#activeRouteBg)" stroke="#059669" stroke-width="1.2"/>
-      
-      <!-- Status Pill -->
-      <rect x="12" y="12" width="62" height="20" rx="4" fill="#064e3b" stroke="#10b981" stroke-width="1"/>
-      <circle cx="21" cy="22" r="3" fill="#34d399"/>
-      <text x="28" y="25" class="font-semi" font-size="10" font-weight="700" fill="#34d399">IN USE</text>
+      <!-- Overview Row 1: Model Tag & Session Tag + Pool Stat -->
+      <g transform="translate(8, 8)">
+        <!-- Model Tag -->
+        <rect x="0" y="0" width="94" height="18" rx="3" fill="#ffffff" fill-opacity="0.05" stroke="#ffffff" stroke-opacity="0.08" stroke-width="1"/>
+        <text x="6" y="12.5" class="font-mono" font-size="9.5" fill="#d1d5db">Gemini 2.5 Pro</text>
 
-      <!-- Account Email -->
-      <text x="82" y="26" class="font-semi" font-size="12" fill="#ffffff">dev-lead@example.com</text>
-      <text x="368" y="26" class="font-mono" font-size="10" font-weight="700" fill="#34d399">ACTIVE</text>
+        <!-- Session Tag -->
+        <text x="104" y="12.5" class="font-sans" font-size="10" fill="#9ca3af">Terminal 1 · main.py</text>
 
-      <!-- Subline Injection -->
-      <text x="14" y="44" class="font-mono" font-size="10" fill="#6ee7b7">╰─ Routing traffic to Terminal 1 (PTY) · Auto-resume ready</text>
+        <!-- Pool Stat -->
+        <text x="342" y="12.5" class="font-mono" font-size="10" fill="#9ca3af">Pool: <tspan fill="#ffffff" font-weight="600">5 / 6</tspan> (83%)</text>
+      </g>
 
-      <!-- Quota Meters -->
-      <g transform="translate(14, 52)">
-        <text x="0" y="14" class="font-mono" font-size="9.5" fill="#94a3b8">Ses: 0%</text>
-        <rect x="48" y="7" width="56" height="4" rx="2" fill="#1e293b"/>
-        <text x="130" y="14" class="font-mono" font-size="9.5" fill="#94a3b8">Wk: 0%</text>
-        <rect x="176" y="7" width="56" height="4" rx="2" fill="#1e293b"/>
-        <text x="280" y="14" class="font-mono" font-size="9.5" fill="#6ee7b7">Reset in 2h 45m</text>
+      <!-- 3px Pool Health Line -->
+      <g transform="translate(8, 32)">
+        <rect x="0" y="0" width="434" height="3" rx="1.5" fill="#1b1e2a"/>
+        <rect x="0" y="0" width="360" height="3" rx="1.5" fill="#10b981"/>
+        <rect x="360" y="0" width="74" height="3" rx="1.5" fill="#7f1d1d"/>
+      </g>
+
+      <!-- Active Route Banner (.route-banner) -->
+      <g transform="translate(8, 42)">
+        <rect x="0" y="0" width="434" height="24" rx="4" fill="#10b981" fill-opacity="0.06" stroke="#10b981" stroke-opacity="0.25" stroke-width="1"/>
+        <circle cx="12" cy="12" r="3" fill="#10b981"/>
+        <text x="20" y="15.5" class="font-sans" font-size="10" fill="#a7f3d0">Routing Active: <tspan fill="#ffffff" font-weight="600">dev-lead@example.com</tspan></text>
+        <text x="336" y="15.5" class="font-mono" font-size="9" fill="#9ca3af">Target: Terminal 1</text>
+      </g>
+
+      <!-- 4 Dynamic Buckets (.bucket-grid) -->
+      <g transform="translate(8, 72)">
+        <!-- Bucket 1: Session (5h) -->
+        <rect x="0" y="0" width="103" height="26" rx="3" fill="#000000" fill-opacity="0.22" stroke="#ffffff" stroke-opacity="0.04" stroke-width="1"/>
+        <text x="6" y="10" class="font-sans" font-size="8" fill="#9ca3af">SESSION (5H)</text>
+        <text x="6" y="21" class="font-mono" font-size="10.5" font-weight="600" fill="#10b981">0%</text>
+
+        <!-- Bucket 2: Weekly -->
+        <rect x="110" y="0" width="103" height="26" rx="3" fill="#000000" fill-opacity="0.22" stroke="#ffffff" stroke-opacity="0.04" stroke-width="1"/>
+        <text x="6" y="10" class="font-sans" font-size="8" fill="#9ca3af">WEEKLY</text>
+        <text x="6" y="21" class="font-mono" font-size="10.5" font-weight="600" fill="#10b981">0%</text>
+
+        <!-- Bucket 3: Claude/GPT (5h) -->
+        <rect x="220" y="0" width="103" height="26" rx="3" fill="#000000" fill-opacity="0.22" stroke="#ffffff" stroke-opacity="0.04" stroke-width="1"/>
+        <text x="6" y="10" class="font-sans" font-size="8" fill="#9ca3af">CLAUDE/GPT (5H)</text>
+        <text x="6" y="21" class="font-mono" font-size="10.5" font-weight="600" fill="#10b981">0%</text>
+
+        <!-- Bucket 4: Claude/GPT (Wk) -->
+        <rect x="331" y="0" width="103" height="26" rx="3" fill="#000000" fill-opacity="0.22" stroke="#ffffff" stroke-opacity="0.04" stroke-width="1"/>
+        <text x="6" y="10" class="font-sans" font-size="8" fill="#9ca3af">CLAUDE/GPT (WK)</text>
+        <text x="6" y="21" class="font-mono" font-size="10.5" font-weight="600" fill="#10b981">0%</text>
       </g>
     </g>
 
-    <!-- Card 2: STANDBY ACCOUNT (worker-alpha@example.com) -->
-    <g transform="translate(16, 202)">
-      <rect x="0" y="0" width="422" height="58" rx="8" fill="#0b0f19" stroke="#1e293b" stroke-width="1"/>
-      <!-- Status Pill -->
-      <rect x="12" y="10" width="58" height="18" rx="4" fill="#1e293b" stroke="#334155" stroke-width="1"/>
-      <circle cx="20" cy="19" r="2.5" fill="#94a3b8"/>
-      <text x="27" y="22" class="font-semi" font-size="9.5" fill="#94a3b8">READY</text>
+    <!-- 3. Section Title (.section-title) -->
+    <g transform="translate(12, 168)">
+      <text x="0" y="10" class="font-semi" font-size="9" fill="#9ca3af" letter-spacing="0.5">ALL ACCOUNTS</text>
+      <text x="396" y="10" class="font-mono" font-size="9" fill="#9ca3af">6 accounts</text>
+    </g>
 
-      <!-- Account Email -->
-      <text x="78" y="23" class="font-regular" font-size="11.5" fill="#e2e8f0">worker-alpha@example.com</text>
+    <!-- 4. Account Cards (#accountsList) -->
+    <g transform="translate(12, 186)">
+      <!-- CARD 1: ACTIVE (dev-lead@example.com) -->
+      <g transform="translate(0, 0)">
+        <rect x="0" y="0" width="450" height="74" rx="5" fill="#12151e" stroke="#10b981" stroke-opacity="0.35" stroke-width="1"/>
 
-      <!-- Select Button -->
-      <rect x="364" y="10" width="46" height="18" rx="3" fill="#1e293b" stroke="#334155" stroke-width="1"/>
-      <text x="373" y="22" class="font-mono" font-size="9" fill="#cbd5e1">Select</text>
+        <!-- Header Row -->
+        <g transform="translate(9, 7)">
+          <rect x="0" y="0" width="56" height="17" rx="3" fill="#10b981" fill-opacity="0.1" stroke="#10b981" stroke-opacity="0.3" stroke-width="1"/>
+          <circle cx="7" cy="8.5" r="2.5" fill="#10b981"/>
+          <text x="14" y="12" class="font-semi" font-size="9" fill="#34d399">In Use</text>
 
-      <!-- Meters -->
-      <g transform="translate(14, 34)">
-        <text x="0" y="14" class="font-mono" font-size="9" fill="#64748b">Ses: 27%</text>
-        <rect x="48" y="7" width="56" height="4" rx="2" fill="#1e293b"/>
-        <rect x="48" y="7" width="15" height="4" rx="2" fill="#10b981"/>
-        <text x="130" y="14" class="font-mono" font-size="9" fill="#64748b">Wk: 9%</text>
-        <rect x="176" y="7" width="56" height="4" rx="2" fill="#1e293b"/>
-        <rect x="176" y="7" width="5" height="4" rx="2" fill="#10b981"/>
-        <text x="280" y="14" class="font-mono" font-size="9" fill="#64748b">Reset in 2h 10m</text>
+          <text x="64" y="12.5" class="font-semi" font-size="11" fill="#ffffff">dev-lead@example.com</text>
+          <text x="394" y="12" class="font-bold" font-size="9" fill="#10b981">ACTIVE</text>
+        </g>
+
+        <!-- Subline -->
+        <g transform="translate(9, 30)">
+          <text x="0" y="9" class="font-sans" font-size="9.5" fill="#34d399">↳ Routing traffic to active session</text>
+        </g>
+
+        <!-- Metrics Row -->
+        <g transform="translate(9, 48)">
+          <line x1="0" y1="0" x2="432" y2="0" stroke="#ffffff" stroke-opacity="0.04" stroke-width="1"/>
+          <!-- Ses -->
+          <text x="0" y="14" class="font-sans" font-size="8.5" fill="#9ca3af">SES</text>
+          <rect x="22" y="7" width="60" height="3" rx="1.5" fill="#ffffff" fill-opacity="0.08"/>
+          <text x="86" y="14" class="font-mono" font-size="9" fill="#10b981">0%</text>
+
+          <!-- Wk -->
+          <text x="116" y="14" class="font-sans" font-size="8.5" fill="#9ca3af">WK</text>
+          <rect x="136" y="7" width="60" height="3" rx="1.5" fill="#ffffff" fill-opacity="0.08"/>
+          <text x="200" y="14" class="font-mono" font-size="9" fill="#10b981">0%</text>
+
+          <!-- Reset -->
+          <text x="330" y="14" class="font-mono" font-size="9" fill="#9ca3af">Reset: 2h 45m left</text>
+        </g>
       </g>
-    </g>
 
-    <!-- Card 3: STANDBY ACCOUNT (standby-pool@example.com) -->
-    <g transform="translate(16, 268)">
-      <rect x="0" y="0" width="422" height="58" rx="8" fill="#0b0f19" stroke="#1e293b" stroke-width="1"/>
-      <!-- Status Pill -->
-      <rect x="12" y="10" width="58" height="18" rx="4" fill="#1e293b" stroke="#334155" stroke-width="1"/>
-      <circle cx="20" cy="19" r="2.5" fill="#94a3b8"/>
-      <text x="27" y="22" class="font-semi" font-size="9.5" fill="#94a3b8">READY</text>
+      <!-- CARD 2: STANDBY (worker-alpha@example.com) -->
+      <g transform="translate(0, 82)">
+        <rect x="0" y="0" width="450" height="58" rx="5" fill="#12151e" stroke="#1f2430" stroke-width="1"/>
 
-      <!-- Account Email -->
-      <text x="78" y="23" class="font-regular" font-size="11.5" fill="#e2e8f0">standby-pool@example.com</text>
+        <!-- Header Row -->
+        <g transform="translate(9, 7)">
+          <rect x="0" y="0" width="62" height="17" rx="3" fill="#94a3b8" fill-opacity="0.1" stroke="#94a3b8" stroke-opacity="0.2" stroke-width="1"/>
+          <circle cx="7" cy="8.5" r="2.5" fill="#94a3b8"/>
+          <text x="14" y="12" class="font-semi" font-size="9" fill="#94a3b8">Standby</text>
 
-      <!-- Select Button -->
-      <rect x="364" y="10" width="46" height="18" rx="3" fill="#1e293b" stroke="#334155" stroke-width="1"/>
-      <text x="373" y="22" class="font-mono" font-size="9" fill="#cbd5e1">Select</text>
+          <text x="70" y="12.5" class="font-regular" font-size="11" fill="#e5e7eb">worker-alpha@example.com</text>
 
-      <!-- Meters -->
-      <g transform="translate(14, 34)">
-        <text x="0" y="14" class="font-mono" font-size="9" fill="#64748b">Ses: 0%</text>
-        <rect x="48" y="7" width="56" height="4" rx="2" fill="#1e293b"/>
-        <text x="130" y="14" class="font-mono" font-size="9" fill="#64748b">Wk: 0%</text>
-        <rect x="176" y="7" width="56" height="4" rx="2" fill="#1e293b"/>
-        <text x="280" y="14" class="font-mono" font-size="9" fill="#64748b">Reset in 4h 26m</text>
+          <!-- Select Button -->
+          <rect x="388" y="0" width="44" height="18" rx="3" fill="#1e2230" stroke="#1f2430" stroke-width="1"/>
+          <text x="398" y="12.5" class="font-sans" font-size="9.5" fill="#cbd5e1">Select</text>
+        </g>
+
+        <!-- Metrics Row -->
+        <g transform="translate(9, 34)">
+          <line x1="0" y1="0" x2="432" y2="0" stroke="#ffffff" stroke-opacity="0.04" stroke-width="1"/>
+          <!-- Ses -->
+          <text x="0" y="14" class="font-sans" font-size="8.5" fill="#9ca3af">SES</text>
+          <rect x="22" y="7" width="60" height="3" rx="1.5" fill="#ffffff" fill-opacity="0.08"/>
+          <rect x="22" y="7" width="16" height="3" rx="1.5" fill="#10b981"/>
+          <text x="86" y="14" class="font-mono" font-size="9" fill="#10b981">27%</text>
+
+          <!-- Wk -->
+          <text x="116" y="14" class="font-sans" font-size="8.5" fill="#9ca3af">WK</text>
+          <rect x="136" y="7" width="60" height="3" rx="1.5" fill="#ffffff" fill-opacity="0.08"/>
+          <rect x="136" y="7" width="6" height="3" rx="1.5" fill="#10b981"/>
+          <text x="200" y="14" class="font-mono" font-size="9" fill="#10b981">9%</text>
+
+          <!-- Reset -->
+          <text x="330" y="14" class="font-mono" font-size="9" fill="#9ca3af">Reset: 2h 10m left</text>
+        </g>
       </g>
-    </g>
 
-    <!-- Card 4: EXHAUSTED ACCOUNT (runner-beta@example.com) -->
-    <g transform="translate(16, 334)">
-      <rect x="0" y="0" width="422" height="58" rx="8" fill="#0b0f19" stroke="#1e293b" stroke-width="1"/>
-      <!-- Status Pill -->
-      <rect x="12" y="10" width="58" height="18" rx="4" fill="#450a0a" stroke="#b91c1c" stroke-width="1"/>
-      <circle cx="20" cy="19" r="2.5" fill="#ef4444"/>
-      <text x="27" y="22" class="font-semi" font-size="9.5" fill="#f87171">LIMIT</text>
+      <!-- CARD 3: STANDBY (standby-pool@example.com) -->
+      <g transform="translate(0, 148)">
+        <rect x="0" y="0" width="450" height="58" rx="5" fill="#12151e" stroke="#1f2430" stroke-width="1"/>
 
-      <!-- Account Email -->
-      <text x="78" y="23" class="font-regular" font-size="11.5" fill="#64748b">runner-beta@example.com</text>
+        <!-- Header Row -->
+        <g transform="translate(9, 7)">
+          <rect x="0" y="0" width="62" height="17" rx="3" fill="#94a3b8" fill-opacity="0.1" stroke="#94a3b8" stroke-opacity="0.2" stroke-width="1"/>
+          <circle cx="7" cy="8.5" r="2.5" fill="#94a3b8"/>
+          <text x="14" y="12" class="font-semi" font-size="9" fill="#94a3b8">Standby</text>
 
-      <!-- Quota Exceeded Badge -->
-      <text x="354" y="22" class="font-mono" font-size="9" fill="#ef4444">100% EXHAUST</text>
+          <text x="70" y="12.5" class="font-regular" font-size="11" fill="#e5e7eb">standby-pool@example.com</text>
 
-      <!-- Meters -->
-      <g transform="translate(14, 34)">
-        <text x="0" y="14" class="font-mono" font-size="9" fill="#ef4444">Ses: 100%</text>
-        <rect x="52" y="7" width="52" height="4" rx="2" fill="#7f1d1d"/>
-        <text x="130" y="14" class="font-mono" font-size="9" fill="#ef4444">Wk: 100%</text>
-        <rect x="180" y="7" width="52" height="4" rx="2" fill="#7f1d1d"/>
-        <text x="280" y="14" class="font-mono" font-size="9" fill="#f87171">Resets in 18m</text>
+          <!-- Select Button -->
+          <rect x="388" y="0" width="44" height="18" rx="3" fill="#1e2230" stroke="#1f2430" stroke-width="1"/>
+          <text x="398" y="12.5" class="font-sans" font-size="9.5" fill="#cbd5e1">Select</text>
+        </g>
+
+        <!-- Metrics Row -->
+        <g transform="translate(9, 34)">
+          <line x1="0" y1="0" x2="432" y2="0" stroke="#ffffff" stroke-opacity="0.04" stroke-width="1"/>
+          <!-- Ses -->
+          <text x="0" y="14" class="font-sans" font-size="8.5" fill="#9ca3af">SES</text>
+          <rect x="22" y="7" width="60" height="3" rx="1.5" fill="#ffffff" fill-opacity="0.08"/>
+          <text x="86" y="14" class="font-mono" font-size="9" fill="#10b981">0%</text>
+
+          <!-- Wk -->
+          <text x="116" y="14" class="font-sans" font-size="8.5" fill="#9ca3af">WK</text>
+          <rect x="136" y="7" width="60" height="3" rx="1.5" fill="#ffffff" fill-opacity="0.08"/>
+          <text x="200" y="14" class="font-mono" font-size="9" fill="#10b981">0%</text>
+
+          <!-- Reset -->
+          <text x="330" y="14" class="font-mono" font-size="9" fill="#9ca3af">Reset: 4h 26m left</text>
+        </g>
       </g>
-    </g>
 
-    <!-- Action Bar at Panel Bottom (Rotate Best & Sync) -->
-    <g transform="translate(16, 404)">
-      <!-- Rotate Best Primary Button -->
-      <rect x="0" y="0" width="300" height="34" rx="6" fill="#047857" stroke="#10b981" stroke-width="1"/>
-      <text x="100" y="21" class="font-semi" font-size="12" fill="#ffffff">Rotate Best Account</text>
+      <!-- CARD 4: LIMITED (runner-beta@example.com) -->
+      <g transform="translate(0, 214)">
+        <rect x="0" y="0" width="450" height="58" rx="5" fill="#12151e" stroke="#1f2430" stroke-width="1"/>
 
-      <!-- Sync Button -->
-      <rect x="312" y="0" width="110" height="34" rx="6" fill="#1e293b" stroke="#334155" stroke-width="1"/>
-      <text x="352" y="21" class="font-semi" font-size="12" fill="#cbd5e1">Sync</text>
-    </g>
+        <!-- Header Row -->
+        <g transform="translate(9, 7)">
+          <rect x="0" y="0" width="58" height="17" rx="3" fill="#ef4444" fill-opacity="0.08" stroke="#ef4444" stroke-opacity="0.25" stroke-width="1"/>
+          <circle cx="7" cy="8.5" r="2.5" fill="#ef4444"/>
+          <text x="14" y="12" class="font-semi" font-size="9" fill="#f87171">Limited</text>
 
-    <!-- Footer Status -->
-    <g transform="translate(16, 452)">
-      <line x1="0" y1="0" x2="422" y2="0" stroke="#1e293b" stroke-width="1"/>
-      <circle cx="6" cy="18" r="3" fill="#10b981"/>
-      <text x="16" y="22" class="font-mono" font-size="10" fill="#10b981">Background Worker Active</text>
-      <text x="290" y="22" class="font-mono" font-size="10" fill="#64748b">Cooldown: 30s</text>
+          <text x="66" y="12.5" class="font-regular" font-size="11" fill="#9ca3af">runner-beta@example.com</text>
+
+          <!-- Select Button -->
+          <rect x="388" y="0" width="44" height="18" rx="3" fill="#1e2230" stroke="#1f2430" stroke-width="1"/>
+          <text x="398" y="12.5" class="font-sans" font-size="9.5" fill="#6b7280">Select</text>
+        </g>
+
+        <!-- Metrics Row -->
+        <g transform="translate(9, 34)">
+          <line x1="0" y1="0" x2="432" y2="0" stroke="#ffffff" stroke-opacity="0.04" stroke-width="1"/>
+          <!-- Ses -->
+          <text x="0" y="14" class="font-sans" font-size="8.5" fill="#9ca3af">SES</text>
+          <rect x="22" y="7" width="60" height="3" rx="1.5" fill="#7f1d1d"/>
+          <text x="86" y="14" class="font-mono" font-size="9" fill="#ef4444">100%</text>
+
+          <!-- Wk -->
+          <text x="116" y="14" class="font-sans" font-size="8.5" fill="#9ca3af">WK</text>
+          <rect x="136" y="7" width="60" height="3" rx="1.5" fill="#7f1d1d"/>
+          <text x="200" y="14" class="font-mono" font-size="9" fill="#ef4444">100%</text>
+
+          <!-- Reset -->
+          <text x="344" y="14" class="font-mono" font-size="9" fill="#f87171">Reset: 18m left</text>
+        </g>
+      </g>
     </g>
   </g>
 </svg>
