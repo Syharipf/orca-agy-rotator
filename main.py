@@ -106,21 +106,30 @@ def cmd_accounts(args, config: RotatorConfig):
     accounts, active_id, _ = mgr.fetch_accounts()
 
     if not accounts:
-        print("Tidak ada akun Antigravity yang ditemukan di Orca.")
+        print("No managed Antigravity accounts found.")
         return
 
-    print("=" * 90)
-    print(f"{'STATUS':<10} | {'EMAIL':<32} | {'SESSION':<10} | {'WEEKLY':<10} | {'RESET TERDEKAT':<20}")
-    print("=" * 90)
-
+    print(f"Managed Antigravity accounts ({len(accounts)}):")
     for acc in accounts:
-        status = "[ACTIVE]" if acc.id == active_id else ("EXHAUST" if acc.is_exhausted else "READY")
-        session_str = f"{int(acc.session_used * 100)}%"
-        weekly_str = f"{int(acc.weekly_used * 100)}%"
-        reset_str = format_ms_timestamp(acc.earliest_reset_timestamp)
-        print(f"{status:<10} | {acc.email:<32} | {session_str:<10} | {weekly_str:<10} | {reset_str:<20}")
+        is_active = (acc.id == active_id)
+        short_id = acc.id[:8]
+        active_mark = " (active)" if is_active else ""
+        email_str = f"{acc.email}{active_mark}"
 
-    print("=" * 90)
+        # Quota tag
+        if is_active:
+            quota_tag = "[ACTIVE]"
+        elif acc.is_exhausted:
+            quota_tag = "[LIMIT]"
+        else:
+            quota_tag = "[READY]"
+
+        session_pct = f"{min(100, int(acc.session_used * 100))}%"
+        weekly_pct = f"{min(100, int(acc.weekly_used * 100))}%"
+        reset_str = format_ms_timestamp(acc.earliest_reset_timestamp)
+
+        indicator = "* " if is_active else "  "
+        print(f"{indicator}{short_id}  {email_str:<36}  {quota_tag:<8}  Session: {session_pct:<5}  Weekly: {weekly_pct:<5}  (Reset: {reset_str})")
 
 
 def cmd_switch(args, config: RotatorConfig):
