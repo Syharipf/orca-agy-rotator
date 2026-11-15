@@ -1,3 +1,6 @@
+// Orca ADE Antigravity Auto-Switcher Plugin Worker
+// Handles real-time quota monitoring, model detection, status bar updates, and panel RPC.
+
 import { execFile } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { homedir } from 'node:os';
@@ -6,7 +9,7 @@ import { promisify } from 'node:util';
 
 const execFileAsync = promisify(execFile);
 
-const POLL_INTERVAL_MS = 15000;
+const POLL_INTERVAL_MS = 3500;
 const SETTLE_DELAY_MS = 2000;
 const DEFAULT_COOLDOWN_MS = 30000;
 
@@ -40,7 +43,7 @@ function formatMinutesLeft(tsMs) {
   return `${diffMinutes}m`;
 }
 
-async function runOrcaCommand(args, logFn = console.log) {
+async function runOrcaCommand(args, logFn = null) {
   const bin = resolveOrcaBinary();
   const env = {
     ...process.env,
@@ -57,7 +60,57 @@ async function runOrcaCommand(args, logFn = console.log) {
 }
 
 export default function activate(orca) {
-  orca.log('Antigravity Auto-Switcher: Plugin activated.');
+  orca.log('Antigravity Auto-Switcher: Plugin worker activated (Real-time mode).');
+
+  async function detectActiveSession() {
+    try {
+      const termsData = await runOrcaCommand(['terminal', 'list', '--json']);
+      const terms = (termsData && termsData.result && termsData.result.terminals) || [];
+
+      // Find terminal that is active/connected
+      for (const t of terms) {
+        if (!t.connected) continue;
+        const preview = t.preview || '';
+        const title = t.title || '';
+        const combined = `${title} ${preview}`;
+
+        // Look for model name
+        const match = combined.match(/(?:Gemini\s+[0-9\.]+(?:\s+[a-z]+)?|GPT-[0-9\.]+(?:\s+[a-z]+)?|Claude\s+[0-9\.]+(?:\s+[a-z]+)?)/i);
+        const modelName = match ? match[0].trim() : null;
+
+        if (modelName || combined.toLowerCase().includes('antigravity') || combined.toLowerCase().includes('gemini')) {
+          return {
+            terminalId: t.handle,
+            title: t.title || 'Terminal Session',
+            model: modelName || 'Gemini Models (Antigravity)',
+            agent: t.agentIdentity || 'antigravity',
+            lastOutputAt: t.lastOutputAt,
+          };
+        }
+      }
+
+      // Fallback: check most recently writable terminal
+      const writable = terms.find((t) => t.connected && t.writable);
+      if (writable) {
+        return {
+          terminalId: writable.handle,
+          title: writable.title || 'Terminal Session',
+          model: 'Gemini Models (Antigravity)',
+          agent: writable.agentIdentity || 'antigravity',
+          lastOutputAt: writable.lastOutputAt,
+        };
+      }
+    } catch (e) {
+      // ignore
+    }
+
+    return {
+      terminalId: null,
+      title: 'Active Session',
+      model: 'Gemini Models (Antigravity)',
+      agent: 'antigravity',
+    };
+  }
 
   async function fetchAccountsData() {
     const data = await runOrcaCommand(['account', 'list', '--agent', 'antigravity', '--json'], (msg) => orca.log(msg));
@@ -83,14 +136,39 @@ export default function activate(orca) {
         weeklyResetsAt: weekly.resetsAt,
         isExhausted: (session.usedPercent >= 1.0 || weekly.usedPercent >= 1.0),
         earliestReset: session.resetsAt || weekly.resetsAt || (buckets[0] && buckets[0].resetsAt),
+        buckets: buckets.map((b) => ({
+          name: b.name || b.windowName || 'Bucket',
+          group: b.group || 'Model',
+          usedPercent: Number(b.usedPercent || 0),
+          resetsAt: b.resetsAt,
+        })),
       };
     });
 
     const activeAccount = accounts.find((a) => a.isActive) || null;
-    return { accounts, activeId, activeAccount };
+    const totalAccounts = accounts.length;
+    const availableAccounts = accounts.filter((a) => !a.isExhausted).length;
+    const exhaustedAccounts = accounts.filter((a) => a.isExhausted).length;
+    const healthPercent = totalAccounts > 0 ? Math.round((availableAccounts / totalAccounts) * 100) : 0;
+
+    const activeSession = await detectActiveSession();
+
+    return {
+      accounts,
+      activeId,
+      activeAccount,
+      globalStats: {
+        totalAccounts,
+        availableAccounts,
+        exhaustedAccounts,
+        healthPercent,
+      },
+      activeSession,
+      timestamp: Date.now(),
+    };
   }
 
-  async function updateStatusBar(activeAccount) {
+  async function updateStatusBar(activeAccount, modelName = 'Gemini') {
     if (!activeAccount) {
       await orca.host.call('statusBar.update', {
         id: 'agy-status',
@@ -107,7 +185,7 @@ export default function activate(orca) {
     const tone = activeAccount.isExhausted ? 'danger' : (usedPct >= 80 ? 'warning' : 'success');
 
     const resetStr = activeAccount.earliestReset ? ` · Reset in ${formatMinutesLeft(activeAccount.earliestReset)}` : '';
-    const tooltip = `Antigravity: ${activeAccount.email} (${usedPct}% used)${resetStr}`;
+    const tooltip = `Antigravity: ${activeAccount.email} (${usedPct}% used) · Model: ${modelName}${resetStr}`;
 
     await orca.host.call('statusBar.update', {
       id: 'agy-status',
@@ -120,17 +198,17 @@ export default function activate(orca) {
 
   async function rotateToBestAccount(reason = 'Rate limit terdeteksi') {
     const now = Date.now();
-    if (isSwitching) return { success: false, reason: 'Switch in progress' };
+    if (isSwitching) return { success: false, reason: 'Pergantian akun sedang berlangsung' };
     if (now - lastSwitchTime < DEFAULT_COOLDOWN_MS) {
       const remainingSec = Math.ceil((DEFAULT_COOLDOWN_MS - (now - lastSwitchTime)) / 1000);
-      return { success: false, reason: `In cooldown (${remainingSec}s left)` };
+      return { success: false, reason: `Dalam masa cooldown (${remainingSec}s tersisa)` };
     }
 
     isSwitching = true;
     try {
       const state = await fetchAccountsData();
       if (!state || !state.accounts.length) {
-        return { success: false, reason: 'No accounts' };
+        return { success: false, reason: 'Tidak ada akun Antigravity' };
       }
 
       const activeEmail = state.activeAccount ? state.activeAccount.email : 'Unknown';
@@ -139,9 +217,9 @@ export default function activate(orca) {
       if (!available.length) {
         await orca.host.call('notifications.show', {
           title: 'Antigravity: Semua Akun Limit!',
-          body: 'Seluruh akun telah mencapai batas kuota 100%. Rotasi dijeda.',
+          body: 'Seluruh akun Antigravity telah mencapai batas kuota 100%. Rotasi dijeda untuk keamanan.',
         });
-        return { success: false, reason: 'All accounts exhausted' };
+        return { success: false, reason: 'Semua akun limit' };
       }
 
       // Sort lowest usage first
@@ -149,15 +227,15 @@ export default function activate(orca) {
       const target = available[0];
 
       orca.log(`Rotating account: ${activeEmail} -> ${target.email} (Reason: ${reason})`);
-      const switchRes = await runOrcaCommand([
+      await runOrcaCommand([
         'account', 'select', '--agent', 'antigravity', '--account', target.email, '--json'
       ]);
 
       lastSwitchTime = Date.now();
 
       await orca.host.call('notifications.show', {
-        title: 'Rotasi Akun Antigravity',
-        body: `Limit pada ${activeEmail}. Berhasil beralih ke ${target.email}`,
+        title: 'Rotasi Akun Antigravity Berhasil',
+        body: `Limit terdeteksi pada ${activeEmail}.\nBeralih ke: ${target.email}`,
       });
 
       // Settle delay before resuming terminal
@@ -178,8 +256,11 @@ export default function activate(orca) {
       }
 
       const newState = await fetchAccountsData();
-      if (newState && newState.activeAccount) {
-        await updateStatusBar(newState.activeAccount);
+      if (newState) {
+        await updateStatusBar(newState.activeAccount, newState.activeSession?.model);
+        if (orca.panels && orca.panels.post) {
+          orca.panels.post('accounts.changed', newState);
+        }
       }
 
       return { success: true, newEmail: target.email };
@@ -188,13 +269,18 @@ export default function activate(orca) {
     }
   }
 
-  // Periodic quota & status bar check
+  // Periodic quota & status bar check with panel broadcast
   async function checkQuotaAndRefresh() {
     try {
       const state = await fetchAccountsData();
       if (!state) return;
 
-      await updateStatusBar(state.activeAccount);
+      await updateStatusBar(state.activeAccount, state.activeSession?.model);
+
+      // Broadcast real-time state to any open panel
+      if (orca.panels && orca.panels.post) {
+        orca.panels.post('accounts.changed', state);
+      }
 
       // Auto rotate if active account is exhausted
       if (state.activeAccount && state.activeAccount.isExhausted) {
@@ -209,19 +295,23 @@ export default function activate(orca) {
   if (orca.events && orca.events.on) {
     orca.events.on('agent.status.changed', async (event) => {
       if (event && event.state === 'blocked') {
-        orca.log(`Agent status changed to blocked: ${event.title || 'agent'}. Checking quota...`);
+        orca.log(`Agent status blocked: ${event.title || 'agent'}. Checking quota...`);
         const state = await fetchAccountsData();
         if (state && state.activeAccount && state.activeAccount.isExhausted) {
           await rotateToBestAccount('Agen terhenti karena limit kuota');
         }
       }
     });
+
+    orca.events.on('workspace.changed', () => {
+      checkQuotaAndRefresh();
+    });
   }
 
-  // Register command for command palette / status bar click
+  // Register command for command palette
   if (orca.commands && orca.commands.register) {
     orca.commands.register('rotate-now', async () => {
-      return rotateToBestAccount('Manual command trigger');
+      return rotateToBestAccount('Triggered from command palette');
     });
   }
 
@@ -242,7 +332,12 @@ export default function activate(orca) {
       const res = await runOrcaCommand(['account', 'select', '--agent', 'antigravity', '--account', target, '--json']);
       lastSwitchTime = Date.now();
       const state = await fetchAccountsData();
-      if (state && state.activeAccount) await updateStatusBar(state.activeAccount);
+      if (state) {
+        await updateStatusBar(state.activeAccount, state.activeSession?.model);
+        if (orca.panels && orca.panels.post) {
+          orca.panels.post('accounts.changed', state);
+        }
+      }
       return { success: true, result: res };
     });
   }

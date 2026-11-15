@@ -5,171 +5,390 @@
   <title>Antigravity Auto-Switcher</title>
   <style>
     :root {
-      --bg: #13151f;
-      --card-bg: #1c1f2e;
-      --card-border: #2d3348;
-      --text: #e2e8f0;
-      --text-muted: #94a3b8;
-      --accent: #6366f1;
+      --bg: var(--orca-background, #0d0f17);
+      --fg: var(--orca-foreground, #ededed);
+      --muted: var(--orca-muted-foreground, #8c95a6);
+      --border: var(--orca-border, #1f2333);
+      --card-bg: var(--orca-card, #141724);
+      --card-hover: var(--orca-accent, #1a1e30);
+      --accent: var(--orca-primary, #6366f1);
       --accent-hover: #4f46e5;
       --success: #10b981;
       --warning: #f59e0b;
       --danger: #ef4444;
-      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      --font: var(--orca-font-sans, "Geist", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: var(--font);
       background-color: var(--bg);
-      color: var(--text);
+      color: var(--fg);
       padding: 14px;
-      font-size: 13px;
+      font-size: 12px;
       line-height: 1.5;
+      user-select: none;
     }
 
+    /* Scrollbars */
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+    /* Header */
     .header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 14px;
-      padding-bottom: 12px;
-      border-bottom: 1px solid var(--card-border);
+      margin-bottom: 12px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
     }
-    .title {
-      font-size: 14px;
-      font-weight: 600;
+    .brand {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .title-row {
       display: flex;
       align-items: center;
+      gap: 6px;
+    }
+    .title {
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: -0.2px;
+    }
+    .live-dot {
+      display: inline-block;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--success);
+      box-shadow: 0 0 8px var(--success);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.85); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+    .subtitle {
+      font-size: 10.5px;
+      color: var(--muted);
+    }
+    .header-actions {
+      display: flex;
       gap: 6px;
     }
     .btn {
       background: var(--accent);
       color: #fff;
-      border: none;
-      padding: 6px 12px;
+      border: 1px solid transparent;
+      padding: 5px 10px;
       border-radius: 6px;
       cursor: pointer;
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 500;
-      transition: background 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.15s ease;
     }
     .btn:hover { background: var(--accent-hover); }
-    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
     .btn-secondary {
-      background: var(--card-border);
-      color: var(--text);
+      background: var(--card-bg);
+      border-color: var(--border);
+      color: var(--fg);
     }
-    .btn-secondary:hover { background: #3b425b; }
+    .btn-secondary:hover { background: var(--card-hover); border-color: var(--muted); }
     .btn-sm {
       padding: 3px 8px;
-      font-size: 11px;
+      font-size: 10.5px;
     }
 
-    .card {
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
+    /* Hero / Overview Card */
+    .hero-card {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(20, 23, 36, 0.95) 100%);
+      border: 1px solid var(--border);
       border-radius: 8px;
       padding: 12px;
-      margin-bottom: 10px;
-      transition: all 0.2s ease;
+      margin-bottom: 12px;
+    }
+    .hero-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 8px;
+    }
+    .model-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: rgba(99, 102, 241, 0.15);
+      border: 1px solid rgba(99, 102, 241, 0.4);
+      color: #a5b4fc;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 5px;
+    }
+    .session-title {
+      font-size: 11px;
+      color: var(--muted);
+      max-width: 170px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      text-align: right;
+    }
+
+    .health-bar-container {
+      margin-top: 6px;
+    }
+    .health-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 10.5px;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+    .segmented-bar {
+      display: flex;
+      height: 6px;
+      background: #0f111a;
+      border-radius: 3px;
+      overflow: hidden;
+      gap: 2px;
+    }
+    .segment {
+      height: 100%;
+      transition: width 0.3s ease;
+    }
+    .seg-ready { background: var(--success); }
+    .seg-exhausted { background: rgba(239, 68, 68, 0.7); }
+
+    /* Bucket Grid for Active Account */
+    .buckets-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 6px;
+      margin-top: 10px;
+      padding-top: 8px;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .bucket-box {
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      border-radius: 5px;
+      padding: 6px 8px;
+    }
+    .bucket-name {
+      font-size: 9.5px;
+      color: var(--muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-bottom: 2px;
+    }
+    .bucket-val {
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    /* Section Heading */
+    .section-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin: 14px 0 8px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* Account Cards */
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      padding: 10px 12px;
+      margin-bottom: 8px;
+      transition: all 0.15s ease;
+    }
+    .card:hover {
+      border-color: rgba(255, 255, 255, 0.15);
+      background: var(--card-hover);
     }
     .card.active {
       border-color: var(--accent);
-      box-shadow: 0 0 10px rgba(99, 102, 241, 0.2);
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.06) 0%, var(--card-bg) 100%);
+      box-shadow: 0 0 12px rgba(99, 102, 241, 0.15);
     }
     .card-head {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
     }
     .email {
       font-weight: 600;
-      font-size: 13px;
+      font-size: 12px;
+      color: var(--fg);
       word-break: break-all;
     }
     .badge {
-      font-size: 10px;
+      font-size: 9.5px;
       padding: 2px 6px;
       border-radius: 4px;
       font-weight: 600;
       text-transform: uppercase;
+      letter-spacing: 0.3px;
     }
     .badge-active { background: rgba(99, 102, 241, 0.2); color: #818cf8; border: 1px solid #6366f1; }
-    .badge-ready { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid #10b981; }
-    .badge-limit { background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid #ef4444; }
+    .badge-ready { background: rgba(16, 185, 129, 0.18); color: #34d399; border: 1px solid var(--success); }
+    .badge-limit { background: rgba(239, 68, 68, 0.18); color: #f87171; border: 1px solid var(--danger); }
 
-    .quota-row {
+    .meter-row {
       display: flex;
       align-items: center;
-      gap: 8px;
-      margin-top: 6px;
-      font-size: 11px;
-      color: var(--text-muted);
+      gap: 6px;
+      margin-top: 5px;
+      font-size: 10.5px;
+      color: var(--muted);
     }
-    .progress-bar-bg {
+    .meter-label { width: 44px; flex-shrink: 0; }
+    .meter-bg {
       flex: 1;
-      height: 6px;
-      background: #111420;
+      height: 5px;
+      background: rgba(0, 0, 0, 0.3);
       border-radius: 3px;
       overflow: hidden;
     }
-    .progress-bar-fill {
+    .meter-fill {
       height: 100%;
       border-radius: 3px;
       transition: width 0.3s ease;
+    }
+    .meter-val {
+      width: 30px;
+      text-align: right;
+      font-weight: 500;
+      flex-shrink: 0;
     }
 
     .card-footer {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-top: 10px;
-      padding-top: 8px;
-      border-top: 1px solid rgba(255, 255, 255, 0.05);
-      font-size: 11px;
-      color: var(--text-muted);
+      margin-top: 8px;
+      padding-top: 6px;
+      border-top: 1px solid rgba(255, 255, 255, 0.04);
+      font-size: 10.5px;
+      color: var(--muted);
     }
 
-    .status-alert {
+    .status-toast {
       padding: 8px 12px;
       border-radius: 6px;
-      margin-bottom: 12px;
-      font-size: 12px;
+      margin-bottom: 10px;
+      font-size: 11.5px;
       display: none;
+      animation: fadeIn 0.2s ease;
     }
-    .status-alert.info { background: rgba(99, 102, 241, 0.15); color: #c7d2fe; display: block; }
-    .status-alert.error { background: rgba(239, 68, 68, 0.15); color: #fca5a5; display: block; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .status-toast.info { background: rgba(99, 102, 241, 0.15); color: #c7d2fe; border: 1px solid rgba(99, 102, 241, 0.3); display: block; }
+    .status-toast.error { background: rgba(239, 68, 68, 0.15); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.3); display: block; }
 
-    .loading {
+    .loading-state {
       text-align: center;
-      padding: 24px;
-      color: var(--text-muted);
+      padding: 30px 10px;
+      color: var(--muted);
     }
   </style>
 </head>
 <body>
 
+  <!-- Navigation & Status Header -->
   <div class="header">
-    <div class="title">
-      <span>🔄 Antigravity Auto-Switcher</span>
+    <div class="brand">
+      <div class="title-row">
+        <span class="live-dot" title="Real-time syncing aktif"></span>
+        <span class="title">Antigravity Switcher</span>
+      </div>
+      <span class="subtitle">Auto-Rotation & Quota Engine</span>
     </div>
-    <div style="display: flex; gap: 6px;">
-      <button id="btnRefresh" class="btn btn-secondary">Refresh</button>
-      <button id="btnRotate" class="btn">Rotate Best</button>
+    <div class="header-actions">
+      <button id="btnRefresh" class="btn btn-secondary" title="Muat ulang status akun">⟳ Refresh</button>
+      <button id="btnRotate" class="btn" title="Rotasi ke akun paling kosong sekarang">🔄 Rotate Best</button>
     </div>
   </div>
 
-  <div id="statusAlert" class="status-alert"></div>
-  <div id="accountsList" class="loading">Memuat daftar akun Orca...</div>
+  <div id="statusToast" class="status-toast"></div>
+
+  <!-- Hero Dashboard: Active Model & Global Usage -->
+  <div id="heroCard" class="hero-card">
+    <div class="hero-meta">
+      <div>
+        <div id="modelBadge" class="model-badge">
+          <span>󰪣</span>
+          <span id="modelNameText">Gemini 3.8 Flash</span>
+        </div>
+      </div>
+      <div id="sessionTitleText" class="session-title" title="Target Session">Terminal Session</div>
+    </div>
+
+    <div class="health-bar-container">
+      <div class="health-labels">
+        <span id="healthSummaryText">Pool Health: Menghitung...</span>
+        <span id="healthPercentText">0%</span>
+      </div>
+      <div class="segmented-bar">
+        <div id="segReady" class="segment seg-ready" style="width: 0%;"></div>
+        <div id="segExhausted" class="segment seg-exhausted" style="width: 0%;"></div>
+      </div>
+    </div>
+
+    <!-- Active Account 4 Buckets Breakdown -->
+    <div id="bucketsContainer" class="buckets-grid">
+      <div class="bucket-box">
+        <div class="bucket-name">⚡ Gemini 5h</div>
+        <div id="bGemini5h" class="bucket-val" style="color: var(--success);">0%</div>
+      </div>
+      <div class="bucket-box">
+        <div class="bucket-name">📅 Gemini Weekly</div>
+        <div id="bGeminiWeekly" class="bucket-val" style="color: var(--success);">0%</div>
+      </div>
+      <div class="bucket-box">
+        <div class="bucket-name">🤖 Claude/GPT 5h</div>
+        <div id="bClaude5h" class="bucket-val" style="color: var(--success);">0%</div>
+      </div>
+      <div class="bucket-box">
+        <div class="bucket-name">🌐 Claude/GPT Weekly</div>
+        <div id="bClaudeWeekly" class="bucket-val" style="color: var(--success);">0%</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section Title -->
+  <div class="section-title">
+    <span>Akun Terdaftar</span>
+    <span id="accountsCountText" style="font-size: 10px; font-weight: normal; color: var(--muted);">0 akun</span>
+  </div>
+
+  <!-- Accounts List -->
+  <div id="accountsList" class="loading-state">
+    Menghubungkan ke Orca ADE Host...
+  </div>
 
   <script>
     async function rpc(name, input) {
       const host = window.orca || globalThis.orca;
-      if (!host) {
-        throw new Error('Host API Orca belum terhubung.');
-      }
+      if (!host) throw new Error('Host API Orca belum terhubung.');
 
       if (host.plugin && typeof host.plugin.request === 'function') {
         const res = await host.plugin.request(name, input, { timeoutMs: 15000 });
@@ -187,12 +406,12 @@
       throw new Error('Host API Orca tidak memiliki method plugin.request.');
     }
 
-    function showAlert(msg, isError = false) {
-      const el = document.getElementById('statusAlert');
+    function showToast(msg, isError = false) {
+      const el = document.getElementById('statusToast');
       el.textContent = msg;
-      el.className = 'status-alert ' + (isError ? 'error' : 'info');
+      el.className = 'status-toast ' + (isError ? 'error' : 'info');
       el.style.display = 'block';
-      setTimeout(() => { el.style.display = 'none'; }, 5000);
+      setTimeout(() => { el.style.display = 'none'; }, 4500);
     }
 
     function formatMinutes(tsMs) {
@@ -201,17 +420,66 @@
       return `${m}m lagi`;
     }
 
-    function renderAccounts(data) {
-      const container = document.getElementById('accountsList');
-      const accounts = (data && data.accounts) || (Array.isArray(data) ? data : []);
+    function renderDashboard(data) {
+      if (!data) return;
 
-      if (!accounts || !accounts.length) {
+      // 1. Model & Active Session
+      const model = data.activeSession?.model || 'Gemini Models (Antigravity)';
+      document.getElementById('modelNameText').textContent = model;
+      document.getElementById('sessionTitleText').textContent = data.activeSession?.title || 'Active Session';
+
+      // 2. Global Health Bar
+      const stats = data.globalStats || {};
+      const total = stats.totalAccounts || (data.accounts ? data.accounts.length : 0);
+      const avail = stats.availableAccounts || 0;
+      const pct = stats.healthPercent || (total > 0 ? Math.round((avail / total) * 100) : 0);
+
+      document.getElementById('healthSummaryText').textContent = `Pool: ${avail} / ${total} Akun Siap (${pct}%)`;
+      document.getElementById('healthPercentText').textContent = `${pct}% Ready`;
+
+      const readyWidth = total > 0 ? (avail / total) * 100 : 0;
+      const exhaustWidth = 100 - readyWidth;
+      document.getElementById('segReady').style.width = readyWidth + '%';
+      document.getElementById('segExhausted').style.width = exhaustWidth + '%';
+
+      // 3. Active Account Buckets
+      const active = data.activeAccount;
+      if (active && active.buckets && active.buckets.length) {
+        document.getElementById('bucketsContainer').style.display = 'grid';
+        active.buckets.forEach(b => {
+          const name = (b.name || '').toLowerCase();
+          const used = Math.round((b.usedPercent || 0) * 100);
+          const color = used >= 100 ? 'var(--danger)' : (used >= 80 ? 'var(--warning)' : 'var(--success)');
+
+          if (name.includes('gemini') && name.includes('five')) {
+            const el = document.getElementById('bGemini5h');
+            el.textContent = `${used}%`;
+            el.style.color = color;
+          } else if (name.includes('gemini') && name.includes('weekly')) {
+            const el = document.getElementById('bGeminiWeekly');
+            el.textContent = `${used}%`;
+            el.style.color = color;
+          } else if (name.includes('claude') && name.includes('five')) {
+            const el = document.getElementById('bClaude5h');
+            el.textContent = `${used}%`;
+            el.style.color = color;
+          } else if (name.includes('claude') && name.includes('weekly')) {
+            const el = document.getElementById('bClaudeWeekly');
+            el.textContent = `${used}%`;
+            el.style.color = color;
+          }
+        });
+      }
+
+      // 4. Accounts List
+      const accounts = data.accounts || [];
+      document.getElementById('accountsCountText').textContent = `${accounts.length} akun terdaftar`;
+
+      const container = document.getElementById('accountsList');
+      if (!accounts.length) {
         container.innerHTML = `
-          <div class="loading">
-            <p>Tidak ada akun Antigravity yang terdeteksi.</p>
-            <p style="font-size:11px; margin-top:8px; color:var(--text-muted);">
-              Pastikan minimal satu akun Antigravity sudah login di Orca Host.
-            </p>
+          <div class="loading-state">
+            <p>Tidak ada akun Antigravity yang terdaftar.</p>
           </div>
         `;
         return;
@@ -223,7 +491,7 @@
         card.className = 'card' + (acc.isActive ? ' active' : '');
 
         const badgeClass = acc.isActive ? 'badge-active' : (acc.isExhausted ? 'badge-limit' : 'badge-ready');
-        const badgeText = acc.isActive ? 'Active' : (acc.isExhausted ? 'Exhausted' : 'Ready');
+        const badgeText = acc.isActive ? 'Active' : (acc.isExhausted ? 'Exhausted' : 'Ready (0%)');
 
         const sessionPct = Math.round((acc.sessionUsed || 0) * 100);
         const weeklyPct = Math.round((acc.weeklyUsed || 0) * 100);
@@ -237,32 +505,32 @@
             <span class="badge ${badgeClass}">${badgeText}</span>
           </div>
 
-          <div class="quota-row">
-            <span style="width: 50px;">Session:</span>
-            <div class="progress-bar-bg">
-              <div class="progress-bar-fill" style="width: ${Math.min(100, sessionPct)}%; background: ${sessionColor};"></div>
+          <div class="meter-row">
+            <span class="meter-label">Session</span>
+            <div class="meter-bg">
+              <div class="meter-fill" style="width: ${Math.min(100, sessionPct)}%; background: ${sessionColor};"></div>
             </div>
-            <span style="width: 35px; text-align: right;">${sessionPct}%</span>
+            <span class="meter-val" style="color: ${sessionColor};">${sessionPct}%</span>
           </div>
 
-          <div class="quota-row">
-            <span style="width: 50px;">Weekly:</span>
-            <div class="progress-bar-bg">
-              <div class="progress-bar-fill" style="width: ${Math.min(100, weeklyPct)}%; background: ${weeklyColor};"></div>
+          <div class="meter-row">
+            <span class="meter-label">Weekly</span>
+            <div class="meter-bg">
+              <div class="meter-fill" style="width: ${Math.min(100, weeklyPct)}%; background: ${weeklyColor};"></div>
             </div>
-            <span style="width: 35px; text-align: right;">${weeklyPct}%</span>
+            <span class="meter-val" style="color: ${weeklyColor};">${weeklyPct}%</span>
           </div>
 
           <div class="card-footer">
             <span>Reset: ${formatMinutes(acc.earliestReset)}</span>
-            ${acc.isActive ? '<span>(Sedang Aktif)</span>' : `<button class="btn btn-secondary btn-sm btn-select" data-email="${acc.email}">Pilih Akun</button>`}
+            ${acc.isActive ? '<span style="color: var(--accent); font-weight: 500;">✓ Sedang Aktif</span>' : `<button class="btn btn-secondary btn-sm btn-select" data-email="${acc.email}">Pilih Akun</button>`}
           </div>
         `;
 
         container.appendChild(card);
       });
 
-      // Bind select buttons
+      // Bind selection buttons
       container.querySelectorAll('.btn-select').forEach(btn => {
         btn.addEventListener('click', (e) => {
           const email = e.target.getAttribute('data-email');
@@ -275,20 +543,20 @@
       try {
         const res = await rpc('accounts.read');
         const state = (res && res.value !== undefined) ? res.value : res;
-        renderAccounts(state);
+        renderDashboard(state);
       } catch (err) {
-        document.getElementById('accountsList').innerHTML = `<div class="loading" style="color:var(--danger)">Gagal memuat: ${err.message}</div>`;
+        document.getElementById('accountsList').innerHTML = `<div class="loading-state" style="color:var(--danger)">Gagal memuat: ${err.message}</div>`;
       }
     }
 
     async function selectAccount(email) {
       try {
-        showAlert(`Beralih ke ${email}...`);
+        showToast(`Beralih ke ${email}...`);
         await rpc('accounts.selectTarget', { target: email });
-        showAlert(`Berhasil berganti ke ${email}!`);
+        showToast(`Berhasil beralih ke ${email}!`);
         await loadData();
       } catch (err) {
-        showAlert(`Gagal berganti akun: ${err.message}`, true);
+        showToast(`Gagal berganti akun: ${err.message}`, true);
       }
     }
 
@@ -298,24 +566,36 @@
 
     document.getElementById('btnRotate').addEventListener('click', async () => {
       try {
-        showAlert('Mencari akun terbaik & merotasi...');
+        showToast('Mencari akun terbaik & merotasi...');
         const res = await rpc('accounts.rotateNow');
         const result = (res && res.value !== undefined) ? res.value : res;
         if (result && result.success) {
-          showAlert(`Berhasil beralih ke ${result.newEmail}!`);
+          showToast(`Berhasil beralih ke ${result.newEmail}!`);
         } else {
-          showAlert(`Rotasi ditunda: ${result?.reason || 'Semua akun limit'}`, true);
+          showToast(`Rotasi ditunda: ${result?.reason || 'Semua akun limit'}`, true);
         }
         await loadData();
       } catch (err) {
-        showAlert(`Error rotasi: ${err.message}`, true);
+        showToast(`Error rotasi: ${err.message}`, true);
       }
     });
 
-    // Auto-init with retry in case window.orca is injected slightly later
+    // Real-time Event Subscription from Worker
+    function setupRealtimeListener() {
+      const host = window.orca || globalThis.orca;
+      if (host && host.plugin && typeof host.plugin.on === 'function') {
+        host.plugin.on('accounts.changed', (payload) => {
+          const data = (payload && payload.value !== undefined) ? payload.value : payload;
+          renderDashboard(data);
+        });
+      }
+    }
+
+    // Auto-init with retry for frame injection
     let attempts = 0;
     function tryInit() {
       if (window.orca || globalThis.orca || attempts > 10) {
+        setupRealtimeListener();
         loadData();
       } else {
         attempts++;
@@ -323,6 +603,9 @@
       }
     }
     tryInit();
+
+    // Fast polling fallback (every 3.5s for real-time responsiveness)
+    setInterval(loadData, 3500);
   </script>
 </body>
 </html>
