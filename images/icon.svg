@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <defs>
+    <!-- Background Gradient: Deep Slate to Obsidian -->
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="128" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#111827"/>
+      <stop offset="100%" stop-color="#030712"/>
+    </linearGradient>
+
+    <!-- Subtle Border Stroke -->
+    <linearGradient id="border" x1="0" y1="0" x2="128" y2="128" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#374151"/>
+      <stop offset="100%" stop-color="#1f2937"/>
+    </linearGradient>
+
+    <!-- Emerald / Teal Active Routing Gradient -->
+    <linearGradient id="orbitEmerald" x1="20" y1="20" x2="108" y2="108" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#34d399"/>
+      <stop offset="100%" stop-color="#059669"/>
+    </linearGradient>
+
+    <!-- Cyan / Sky Return Gradient -->
+    <linearGradient id="orbitCyan" x1="108" y1="108" x2="20" y2="20" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#38bdf8"/>
+      <stop offset="100%" stop-color="#0284c7"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Base Squircle -->
+  <rect x="6" y="6" width="116" height="116" rx="26" fill="url(#bg)" stroke="url(#border)" stroke-width="1.5"/>
+
+  <!-- Subtle Radial Ambient Behind Core -->
+  <circle cx="64" cy="64" r="36" fill="#10b981" fill-opacity="0.08"/>
+
+  <!-- Top-Right Orbit Arc (Emerald) -->
+  <!-- Arc from 270 deg (64, 29) to 30 deg (94.3, 81.5) -->
+  <path d="M 58 29 A 35 35 0 0 1 97 58 A 35 35 0 0 1 90 80" 
+        fill="none" 
+        stroke="url(#orbitEmerald)" 
+        stroke-width="5" 
+        stroke-linecap="round"/>
+  <!-- Tangent Arrowhead at (90, 80) pointing down-left -->
+  <polyline points="96,66 91,81 76,77" 
+            fill="none" 
+            stroke="url(#orbitEmerald)" 
+            stroke-width="5" 
+            stroke-linecap="round" 
+            stroke-linejoin="round"/>
+
+  <!-- Bottom-Left Orbit Arc (Cyan) -->
+  <!-- Arc from 90 deg (64, 99) to 210 deg (33.7, 46.5) -->
+  <path d="M 70 99 A 35 35 0 0 1 31 70 A 35 35 0 0 1 38 48" 
+        fill="none" 
+        stroke="url(#orbitCyan)" 
+        stroke-width="5" 
+        stroke-linecap="round"/>
+  <!-- Tangent Arrowhead at (38, 48) pointing up-right -->
+  <polyline points="32,62 37,47 52,51" 
+            fill="none" 
+            stroke="url(#orbitCyan)" 
+            stroke-width="5" 
+            stroke-linecap="round" 
+            stroke-linejoin="round"/>
+
+  <!-- Center: Antigravity Chevron / Levitation Vector -->
+  <polyline points="49,71 64,46 79,71" 
+            fill="none" 
+            stroke="#f8fafc" 
+            stroke-width="5" 
+            stroke-linecap="round" 
+            stroke-linejoin="round"/>
+
+  <!-- Routing Gateway Active Pulse Dot -->
+  <circle cx="64" cy="74" r="3.5" fill="#34d399"/>
+</svg>
