@@ -6,32 +6,44 @@
   <title>Antigravity Telemetry & Quota Insights</title>
   <style>
     :root {
-      --bg: var(--orca-background, #0b0e17);
-      --fg: var(--orca-foreground, #ececec);
-      --card: var(--orca-card, #131826);
-      --card-hover: rgba(255, 255, 255, 0.03);
-      --muted-fg: var(--orca-muted-foreground, #94a3b8);
-      --muted: var(--orca-muted, #1e2638);
-      --border: var(--orca-border, #1f283d);
-      --accent: var(--orca-accent, #1d2538);
+      /* shadcn/ui Slate Dark Design System Tokens */
+      --bg: var(--orca-background, #090d16);
+      --fg: var(--orca-foreground, #f8fafc);
+      --card: var(--orca-card, #0f172a);
+      --card-fg: #f8fafc;
+      --card-hover: rgba(255, 255, 255, 0.04);
+      --popover: #0f172a;
+      --popover-fg: #f8fafc;
       --primary: var(--orca-primary, #38bdf8);
-      --radius: var(--orca-radius, 10px);
+      --primary-fg: #0f172a;
+      --secondary: #1e293b;
+      --secondary-fg: #f8fafc;
+      --muted: var(--orca-muted, #1e293b);
+      --muted-fg: var(--orca-muted-foreground, #94a3b8);
+      --accent: var(--orca-accent, #1e293b);
+      --accent-fg: #f8fafc;
+      --destructive: #ef4444;
+      --destructive-fg: #f8fafc;
+      --border: var(--orca-border, rgba(255, 255, 255, 0.08));
+      --input: rgba(255, 255, 255, 0.12);
+      --ring: #38bdf8;
+      --radius: var(--orca-radius, 8px);
 
-      /* Antigravity Signature Color Palette */
+      /* Antigravity Semantic Accents */
       --agy-blue: #3b82f6;
       --agy-cyan: #38bdf8;
       --agy-indigo: #6366f1;
       --agy-purple: #8b5cf6;
       --agy-emerald: #10b981;
-      --agy-emerald-glow: rgba(16, 185, 129, 0.15);
-      --agy-emerald-border: rgba(16, 185, 129, 0.35);
+      --agy-emerald-glow: rgba(16, 185, 129, 0.12);
+      --agy-emerald-border: rgba(16, 185, 129, 0.28);
       --agy-warning: #f59e0b;
       --agy-danger: #ef4444;
-      --agy-danger-glow: rgba(239, 68, 68, 0.15);
-      --agy-danger-border: rgba(239, 68, 68, 0.35);
+      --agy-danger-glow: rgba(239, 68, 68, 0.12);
+      --agy-danger-border: rgba(239, 68, 68, 0.28);
 
-      --font-sans: var(--orca-font-sans, system-ui, -apple-system, "Segoe UI", Roboto, "Geist", sans-serif);
-      --font-mono: var(--orca-font-mono, "JetBrains Mono", "Geist Mono", "SF Mono", Menlo, monospace);
+      --font-sans: var(--orca-font-sans, "Geist", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
+      --font-mono: var(--orca-font-mono, "Geist Mono", "JetBrains Mono", "SF Mono", Menlo, monospace);
     }
 
     * { box-sizing: border-box; }
@@ -40,9 +52,10 @@
       padding: 0;
       background: var(--bg);
       color: var(--fg);
-      font: 12px/1.4 var(--font-sans);
+      font: 12px/1.45 var(--font-sans);
       user-select: none;
       -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
       overflow-x: hidden;
       width: 100%;
       min-width: 0;
@@ -53,8 +66,7 @@
       display: flex;
       flex-direction: column;
       gap: 10px;
-      width: 100%;
-      max-width: 900px;
+      width: 100%;\n      max-width: 900px;
       margin: 0 auto;
       min-width: 0;
       overflow-x: hidden;
@@ -63,8 +75,8 @@
     /* Scrollbars */
     ::-webkit-scrollbar { width: 4px; height: 4px; }
     ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-    ::-webkit-scrollbar-thumb:hover { background: #334155; }
+    ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.12); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.2); }
 
     /* ================= 1. DYNAMIC TIME-BASED HERO BANNER ================= */
     .hero {
@@ -75,6 +87,7 @@
       min-height: 106px;
       transition: background 0.6s ease;
       background: linear-gradient(135deg, #050814 0%, #0f172a 40%, #1e1b4b 75%, #0b0e17 100%);
+      box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.25);
     }
     .hero-canvas {
       position: absolute;
@@ -88,19 +101,19 @@
     .hero-overlay {
       position: absolute;
       inset: 0;
-      background: linear-gradient(180deg, rgba(11, 14, 23, 0.2) 0%, rgba(11, 14, 23, 0.78) 100%);
+      background: linear-gradient(180deg, rgba(11, 14, 23, 0.2) 0%, rgba(11, 14, 23, 0.82) 100%);
       pointer-events: none;
     }
     .hero-content {
       position: relative;
       z-index: 2;
-      padding: 10px 12px;
+      padding: 12px 14px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
       min-height: 106px;
       color: #fff;
-      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85);
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
     }
     .hero-header {
       display: flex;
@@ -114,8 +127,8 @@
     }
     .hero-title {
       font-size: 13.5px;
-      font-weight: 700;
-      letter-spacing: -0.2px;
+      font-weight: 600;
+      letter-spacing: -0.02em;
       color: #fff;
       margin: 0;
       white-space: nowrap;
@@ -123,25 +136,27 @@
       text-overflow: ellipsis;
     }
     .hero-subtitle {
-      font-size: 10px;
-      color: rgba(255, 255, 255, 0.85);
+      font-size: 10.5px;
+      color: rgba(255, 255, 255, 0.75);
       margin-top: 2px;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
+    /* shadcn/ui Badge Variant: Outline/Subtle */
     .hero-badge {
       display: inline-flex;
       align-items: center;
       gap: 4px;
       font-size: 9.5px;
-      font-weight: 600;
-      padding: 2px 7px;
-      border-radius: 12px;
-      background: rgba(0, 0, 0, 0.35);
-      border: 1px solid rgba(255, 255, 255, 0.25);
+      font-weight: 500;
+      padding: 2px 8px;
+      border-radius: 9999px;
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.18);
       white-space: nowrap;
       flex-shrink: 0;
+      backdrop-filter: blur(4px);
     }
     .hero-stat-row {
       display: flex;
@@ -160,14 +175,14 @@
     .hero-stat-main strong {
       font-size: 24px;
       font-family: var(--font-mono);
-      font-weight: 800;
-      letter-spacing: -0.5px;
+      font-weight: 700;
+      letter-spacing: -0.03em;
       color: #ffffff;
       line-height: 1;
     }
     .hero-stat-main span {
       font-size: 11px;
-      color: rgba(255, 255, 255, 0.88);
+      color: rgba(255, 255, 255, 0.8);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -179,7 +194,7 @@
       white-space: nowrap;
     }
 
-    /* ================= 2. CONTROLS BAR (PERIOD FILTER & ACTIONS) ================= */
+    /* ================= 2. CONTROLS BAR (SHADCN TABS & BUTTONS) ================= */
     .controls {
       display: flex;
       flex-wrap: wrap;
@@ -189,14 +204,17 @@
       width: 100%;
       min-width: 0;
     }
+    /* shadcn/ui TabsList Component */
     .period-group {
       display: inline-flex;
+      align-items: center;
       border: 1px solid var(--border);
-      border-radius: 8px;
+      border-radius: 6px;
       padding: 2px;
-      background: var(--card);
+      background: rgba(15, 23, 42, 0.7);
       flex-shrink: 0;
     }
+    /* shadcn/ui TabsTrigger Component */
     .period-btn {
       border: 0;
       background: transparent;
@@ -204,52 +222,63 @@
       font: inherit;
       font-size: 10.5px;
       font-weight: 500;
-      padding: 3px 8px;
-      border-radius: 6px;
+      padding: 3px 9px;
+      border-radius: 4px;
       cursor: pointer;
-      transition: all 0.12s ease;
+      transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
       white-space: nowrap;
+    }
+    .period-btn:hover {
+      color: var(--fg);
     }
     .period-btn[aria-checked="true"] {
       background: #0284c7;
       color: #ffffff;
       font-weight: 600;
-      box-shadow: 0 1px 4px rgba(2, 132, 199, 0.3);
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
     }
     .actions-group {
       display: inline-flex;
       align-items: center;
-      gap: 4px;
+      gap: 5px;
       flex-shrink: 0;
     }
+    /* shadcn/ui Button (Variant: Outline) */
     .btn {
       border: 1px solid var(--border);
-      background: var(--card);
+      background: rgba(15, 23, 42, 0.6);
       color: var(--fg);
       border-radius: 6px;
-      padding: 3.5px 8px;
-      font-size: 10.5px;
+      padding: 4px 10px;
+      font-size: 11px;
       font-weight: 500;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
+      justify-content: center;
       gap: 4px;
-      transition: background 0.12s ease, border-color 0.12s ease;
+      transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
       white-space: nowrap;
+      box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.15);
     }
     .btn:hover {
-      background: var(--card-hover);
-      border-color: #334155;
+      background: rgba(30, 41, 59, 0.8);
+      border-color: rgba(255, 255, 255, 0.15);
     }
+    .btn:active {
+      transform: scale(0.98);
+    }
+    /* shadcn/ui Button (Variant: Primary / Sky) */
     .btn-rotate {
-      background: #0f2c4d;
-      border-color: #0284c7;
-      color: #7dd3fc;
-      font-weight: 600;
+      background: #0284c7;
+      border-color: #38bdf8;
+      color: #ffffff;
+      font-weight: 500;
     }
     .btn-rotate:hover {
-      background: #0284c7;
-      color: #fff;
+      background: #0369a1;
+      border-color: #7dd3fc;
+      box-shadow: 0 0 10px rgba(56, 189, 248, 0.35);
     }
 
     /* Active Gateway Route Chip */
@@ -661,15 +690,18 @@
       overflow: hidden;
       text-overflow: ellipsis;
     }
+    /* shadcn/ui Badge Variant: Secondary / Outline / Destructive */
     .pill {
-      font-size: 8px;
-      font-weight: 700;
-      padding: 1px 4px;
-      border-radius: 3px;
+      font-size: 8.5px;
+      font-weight: 600;
+      padding: 1.5px 6px;
+      border-radius: 9999px;
       display: inline-flex;
       align-items: center;
+      gap: 3px;
       white-space: nowrap;
       flex-shrink: 0;
+      letter-spacing: 0.02em;
     }
     .pill-active {
       background: var(--agy-emerald-glow);
@@ -677,7 +709,7 @@
       border: 1px solid var(--agy-emerald-border);
     }
     .pill-ready {
-      background: rgba(148, 163, 184, 0.08);
+      background: rgba(148, 163, 184, 0.1);
       color: #94a3b8;
       border: 1px solid rgba(148, 163, 184, 0.2);
     }
@@ -689,52 +721,63 @@
     .meter-inline {
       display: flex;
       align-items: center;
-      gap: 5px;
+      gap: 6px;
       width: 100%;
       min-width: 0;
     }
     .meter-track {
       flex: 1;
-      height: 4px;
+      height: 5px;
       background: rgba(255, 255, 255, 0.08);
-      border-radius: 2px;
+      border-radius: 9999px;
       overflow: hidden;
       min-width: 25px;
     }
     .meter-fill {
       height: 100%;
-      border-radius: 2px;
+      border-radius: 9999px;
+      transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
     .meter-num {
       font-family: var(--font-mono);
       font-size: 9.5px;
-      width: 25px;
+      font-weight: 500;
+      width: 28px;
       text-align: right;
       flex-shrink: 0;
     }
+    /* shadcn/ui Button (Variant: Outline / Small) */
     .btn-select {
-      background: #0284c7;
-      border: 1px solid #38bdf8;
-      color: #ffffff;
-      padding: 3px 9px;
-      font-size: 10px;
-      font-weight: 600;
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid var(--border);
+      color: #f8fafc;
+      padding: 3px 8px;
+      font-size: 10.5px;
+      font-weight: 500;
       border-radius: 5px;
       cursor: pointer;
       white-space: nowrap;
-      transition: all 0.15s ease;
-      box-shadow: 0 1px 3px rgba(2, 132, 199, 0.3);
+      transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.15);
     }
     .btn-select:hover {
-      background: #0369a1;
-      border-color: #7dd3fc;
-      box-shadow: 0 0 8px rgba(56, 189, 248, 0.6);
+      background: #0284c7;
+      border-color: #38bdf8;
+      color: #ffffff;
+      box-shadow: 0 0 8px rgba(56, 189, 248, 0.3);
+    }
+    .btn-select:active {
+      transform: scale(0.97);
     }
     .active-tag {
       font-family: var(--font-mono);
       font-size: 8.5px;
-      font-weight: 700;
+      font-weight: 600;
       color: #34d399;
+      background: var(--agy-emerald-glow);
+      border: 1px solid var(--agy-emerald-border);
+      padding: 1.5px 6px;
+      border-radius: 4px;
       white-space: nowrap;
     }
 
@@ -1411,9 +1454,17 @@
 
     // 2. Active Route Chip
     const activeEmail = activeAcc ? getDisplayEmail(activeAcc.email, 0) : 'None';
-    document.getElementById('srcRouteTitle').textContent = `Active Route: ${activeEmail} (${sUsed}% used)`;
-    const model = data.activeSession?.model || 'Gemini 2.5 Pro / Paid Pool';
-    document.getElementById('srcTargetSub').textContent = `${model} · Auto-resume armed`;
+    document.getElementById('srcRouteTitle').textContent = `Target Sesi: ${activeEmail} (${sUsed}% terpakai)`;
+    const isAgyActive = data.activeSession?.isAntigravityActive;
+    const model = data.activeSession?.model || 'Gemini (Antigravity)';
+    const dot = document.querySelector('.status-dot');
+    if (dot) {
+      dot.style.background = isAgyActive ? 'var(--agy-emerald)' : '#64748b';
+      dot.style.boxShadow = isAgyActive ? '0 0 6px var(--agy-emerald)' : 'none';
+    }
+    document.getElementById('srcTargetSub').textContent = isAgyActive
+      ? `${model} · Auto-resume aktif`
+      : 'Standby · Tidak ada terminal Antigravity';
 
     // 3. 2-Column KPI Cards
     document.getElementById('kpiTotalTokens').textContent = formatTokens(pStats.total);

@@ -23,9 +23,15 @@ class TerminalInfo:
 
     @property
     def is_agent_related(self) -> bool:
-        text = f"{self.title or ''} {self.preview or ''} {self.agent_identity or ''}".lower()
-        agent_keywords = ["antigravity", "gemini", "agy", "model", "flash", "pro", "token"]
-        return any(kw in text for kw in agent_keywords)
+        identity = (self.agent_identity or "").lower()
+        if identity and identity != "antigravity":
+            return False
+        text = f"{self.title or ''} {self.preview or ''}".lower()
+        return (
+            identity == "antigravity"
+            or "antigravity" in text
+            or ("gemini" in text and "gpt-" not in text)
+        )
 
 
 class TerminalManager:

@@ -96,38 +96,33 @@ export default function activate(orca) {
       const termsData = await runOrcaCommand(['terminal', 'list', '--json']);
       const terms = (termsData && termsData.result && termsData.result.terminals) || [];
 
-      // Find terminal that is active/connected
+      // Only inspect terminals that explicitly belong to the Antigravity agent runtime
       for (const t of terms) {
         if (!t.connected) continue;
-        const preview = t.preview || '';
-        const title = t.title || '';
+        const identity = (t.agentIdentity || '').toLowerCase();
+        const preview = (t.preview || '').toLowerCase();
+        const title = (t.title || '').toLowerCase();
         const combined = `${title} ${preview}`;
 
-        // Look for model name (including paid/internal models like Argon, Carbon, Claude, GPT, Gemini)
-        const match = combined.match(/(?:Argon(?:\s+[a-z0-9\.-]+)?|Carbon(?:\s+[a-z0-9\.-]+)?|Gemini\s+[0-9\.]+(?:\s+[a-z]+)?|GPT-[0-9\.]+(?:\s+[a-z]+)?|Claude\s+[0-9\.]+(?:\s+[a-z]+)?|o[13](?:-mini|-preview)?|DeepSeek-[a-z0-9\.-]+)/i);
-        const modelName = match ? match[0].trim() : null;
+        // Explicit Antigravity identity or Antigravity runtime indicators
+        const isAgyAgent = identity === 'antigravity' ||
+          combined.includes('antigravity') ||
+          (combined.includes('gemini') && !combined.includes('gpt-') && !identity.includes('omp') && !identity.includes('codex'));
 
-        if (modelName || combined.toLowerCase().includes('antigravity') || combined.toLowerCase().includes('gemini') || combined.toLowerCase().includes('argon') || combined.toLowerCase().includes('carbon')) {
+        if (isAgyAgent) {
+          // Detect specific Gemini or Antigravity internal model
+          const match = combined.match(/(?:Gemini\s+[0-9\.]+(?:\s+[a-z]+)?|Argon(?:[\s\-][a-z0-9\.]+)?|Carbon(?:[\s\-][a-z0-9\.]+)?)/i);
+          const modelName = match ? match[0].trim() : 'Gemini (Antigravity)';
+
           return {
             terminalId: t.handle,
-            title: t.title || 'Terminal Session',
-            model: modelName || 'Gemini / Paid Models (Antigravity)',
-            agent: t.agentIdentity || 'antigravity',
+            title: t.title || 'Antigravity Session',
+            model: modelName,
+            agent: 'antigravity',
+            isAntigravityActive: true,
             lastOutputAt: t.lastOutputAt,
           };
         }
-      }
-
-      // Fallback: check most recently writable terminal
-      const writable = terms.find((t) => t.connected && t.writable);
-      if (writable) {
-        return {
-          terminalId: writable.handle,
-          title: writable.title || 'Terminal Session',
-          model: 'Gemini Models (Antigravity)',
-          agent: writable.agentIdentity || 'antigravity',
-          lastOutputAt: writable.lastOutputAt,
-        };
       }
     } catch (e) {
       // ignore
@@ -135,9 +130,10 @@ export default function activate(orca) {
 
     return {
       terminalId: null,
-      title: 'Active Session',
-      model: 'Gemini Models (Antigravity)',
+      title: 'Antigravity Standby',
+      model: 'Tidak ada sesi Antigravity aktif',
       agent: 'antigravity',
+      isAntigravityActive: false,
     };
   }
 
@@ -449,8 +445,15 @@ export default function activate(orca) {
       const writableTerms = terms.filter((t) => t.connected && t.writable);
 
       function isAgentTerminal(t) {
-        const text = `${t.title || ''} ${t.preview || ''} ${t.agentIdentity || ''}`.toLowerCase();
-        return text.includes('antigravity') || text.includes('gemini') || text.includes('agy') || text.includes('argon') || text.includes('carbon');
+        const identity = (t.agentIdentity || '').toLowerCase();
+        const text = `${t.title || ''} ${t.preview || ''}`.toLowerCase();
+
+        // Must not be another external agent like OMP or Codex
+        if (identity && identity !== 'antigravity') return false;
+
+        return identity === 'antigravity' ||
+          text.includes('antigravity') ||
+          (text.includes('gemini') && !text.includes('gpt-'));
       }
 
       let targetTerm = null;
@@ -527,10 +530,16 @@ export default function activate(orca) {
   if (orca.events && orca.events.on) {
     orca.events.on('agent.status.changed', async (event) => {
       if (event && event.state === 'blocked') {
-        orca.log(`Agent status blocked: ${event.title || 'agent'}. Checking quota...`);
+        const agentId = (event.agentIdentity || event.agent || event.title || '').toLowerCase();
+        // Ignore events from other agents like codex, omp, etc.
+        if (agentId && !agentId.includes('antigravity') && !agentId.includes('gemini') && (agentId.includes('omp') || agentId.includes('codex'))) {
+          return;
+        }
+
+        orca.log(`Antigravity agent blocked: ${event.title || 'agent'}. Checking quota...`);
         const state = await fetchAccountsData();
         if (state && state.activeAccount && state.activeAccount.isExhausted) {
-          await rotateToBestAccount('Agen terhenti karena limit kuota');
+          await rotateToBestAccount('Agen Antigravity terhenti karena limit kuota');
         }
       }
     });
